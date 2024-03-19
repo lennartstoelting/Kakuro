@@ -30,7 +30,8 @@ class Controller {
         });
 
         this.solveButton.addEventListener("click", () => {
-            console.log("solve button clicked");
+            this.model.solve();
+            this._updateView();
         });
     }
 

@@ -5,7 +5,7 @@ class Model {
     constructor() {
         // grundsätzlich: unspielbar, Summenfeld, spielbar
         // Idee: 13 bit Zahl (bit 0: spielbar ja oder nein? bit 1-12: Summenfeld)
-        this.matrix = this.initBinaryMatrix(easy1);
+        this.matrix = this.initBinaryMatrix(medium2);
         this.sumTable = this.initSumTable();
 
         console.log(this.matrix);
@@ -100,6 +100,49 @@ class Model {
 
         return table;
     }
+
+    solve(): void {
+        let yTest = 3;
+        let xTest = 6;
+
+        if (!(this.matrix[yTest][xTest] & 1)) {
+            console.log("tile is not playable");
+            return;
+        }
+
+        let columnInfo = this._getColumnInfo(yTest, xTest);
+        let rowInfo = this._getRowInfo(yTest, xTest);
+        console.log("columnInfo: " + columnInfo + " rowInfo: " + rowInfo);
+
+        this.matrix[yTest][xTest] = parseInt("1101111111", 2);
+    }
+
+    /**
+     * loops up to find the sum of the column
+     * loops down from there to find the empty tiles below that sum
+     * @returns array with the sum to the right and the amount of empty tiles in the column
+     */
+    _getColumnInfo(y: number, x: number): number[] {
+        while (y >= 0 && this.matrix[y][x] & 1) {
+            y--;
+        }
+        let emptyTilesInColumn = 1;
+        while (y + emptyTilesInColumn < 9 && this.matrix[y + emptyTilesInColumn + 1][x] & 1) {
+            emptyTilesInColumn++;
+        }
+        return [(this.matrix[y][x] >> 7) & 63, emptyTilesInColumn];
+    }
+
+    _getRowInfo(y: number, x: number): number[] {
+        while (x >= 0 && this.matrix[y][x] & 1) {
+            x--;
+        }
+        let emptyTilesInRow = 1;
+        while (x + emptyTilesInRow < 9 && this.matrix[y][x + emptyTilesInRow + 1] & 1) {
+            emptyTilesInRow++;
+        }
+        return [(this.matrix[y][x] >> 1) & 63, emptyTilesInRow];
+    }
 }
 
 export default Model;
@@ -115,4 +158,17 @@ const easy1: number[][] = [
     [0.14, 1, 1, 3.1, 1, 1, 1, 16.12, 1, 1],
     [0, 0.19, 1, 1, 1, 1, 0.18, 1, 1, 1],
     [0, 0.05, 1, 1, 0, 0, 0.1, 1, 1, 0],
+];
+
+const medium2: number[][] = [
+    [0, 0, 29, 4, 0, 7, 34, 16, 0, 0],
+    [0, 0.08, 1, 1, 3.17, 1, 1, 1, 0, 0],
+    [0, 3.31, 1, 1, 1, 1, 1, 1, 0, 0],
+    [0.1, 1, 1, 24.1, 1, 1, 1, 24, 0, 0],
+    [0.16, 1, 1, 1, 15, 0.13, 1, 1, 0, 0],
+    [0, 0, 0.13, 1, 1, 0.16, 1, 1, 10, 16],
+    [0, 0, 0.1, 1, 1, 24, 3.16, 1, 1, 1],
+    [0, 0, 0, 17.14, 1, 1, 1, 17.11, 1, 1],
+    [0, 0, 0.3, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0.18, 1, 1, 1, 0.13, 1, 1, 0],
 ];
