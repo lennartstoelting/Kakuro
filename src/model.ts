@@ -112,8 +112,8 @@ class Model {
                     return;
                 }
 
-                this._crossReferenceSumTableEntries(y, x);
-
+                this.matrix[y][x] &= this._crossReferenceSumTableEntries(y, x);
+                this.matrix[y][x] &= this._sudokuRules(y, x);
                 // next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
                 // this one already might need to be a recursive function to gain of of each won step
                 //
@@ -129,7 +129,7 @@ class Model {
         // this.matrix[yTest][xTest] = parseInt("1101111111", 2);
     }
 
-    _crossReferenceSumTableEntries(y: number, x: number): void {
+    _crossReferenceSumTableEntries(y: number, x: number): number {
         let colInfo = this._getColumnInfo(y, x);
         let rowInfo = this._getRowInfo(y, x);
 
@@ -144,7 +144,7 @@ class Model {
         }, 0);
 
         let possibleCombinations = rowCombinations & colCombinations;
-        this.matrix[y][x] = (possibleCombinations << 1) | 1;
+        return (possibleCombinations << 1) | 1;
     }
     /**
      * loops up to find the sum of the column
@@ -172,6 +172,10 @@ class Model {
         }
         return { sum: (this.matrix[y][x] >> 1) & 63, tileAmount: emptyTilesInRow };
         // return [(this.matrix[y][x] >> 1) & 63, emptyTilesInRow];
+    }
+
+    _sudokuRules(y: number, x: number): number {
+        return 1023;
     }
 }
 
