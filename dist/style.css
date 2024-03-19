@@ -32,3 +32,30 @@ body {
     text-align: center;
     padding: 1%;
 }
+
+#info-container > * {
+    margin: 3%;
+}
+
+#game-buttons {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+button {
+    padding: 15px;
+    margin: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    flex: 1 1 0px; /*make buttons grow to same size always*/
+    background-color: blue;
+    color: white;
+    font-size: 2.5vh;
+}
+
+button:hover {
+    background-color: rgb(119, 119, 255);
+    transition: 0.25s;
+}

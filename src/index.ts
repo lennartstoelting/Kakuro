@@ -7,24 +7,40 @@ class Controller {
     model: Model;
     view: View;
 
+    // buttons
+    solveButton: HTMLButtonElement;
+
     constructor() {
         this.model = new Model();
         this.view = new View();
 
+        this._getDomElements();
         this._initEventListeners();
 
         this._updateView();
+    }
+
+    private _getDomElements(): void {
+        this.solveButton = document.getElementById("solve") as HTMLButtonElement;
     }
 
     private _initEventListeners(): void {
         window.addEventListener("resize", () => {
             this._updateView();
         });
+
+        this.solveButton.addEventListener("click", () => {
+            console.log("solve button clicked");
+        });
     }
 
     private _updateView(): void {
         this.view.drawBoard(this.model.matrix);
-        // this.view.board.addEventListener("click", (event: MouseEvent) => this._boardClicked(event));
+        this.view.board.addEventListener("click", (event: MouseEvent) => this._boardClicked(event));
+    }
+
+    private _boardClicked(event: MouseEvent): void {
+        console.log("board clicked");
     }
 }
 
