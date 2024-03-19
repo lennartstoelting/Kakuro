@@ -4,8 +4,8 @@ class Model {
     constructor(tilesAcross: number) {
         // grundsätzlich: unspielbar, Summenfeld, spielbar
         // Idee: 13 bit Zahl (bit 0: spielbar ja oder nein? bit 1-12: Summenfeld)
-        this.matrix = test;
-        console.log(this.matrixToBinaryMatrix(this.matrix));
+        this.matrix = this.matrixToBinaryMatrix(test);
+        console.log(this.matrix);
     }
 
     matrixToBinaryMatrix(matrix: number[][]): number[][] {
@@ -49,7 +49,7 @@ const test: number[][] = [
     [null, null, 45, 3, null, null, null, 3, 45, null],
     [null, 17.08, 1, 1, null, 16, 4.03, 1, 1, null],
     [0.11, 1, 1, 1, 16.17, 1, 1, 1, 1, 17],
-    [17, 1, 1, 3.17, 1, 1, 1, 0.16, 1, 1],
+    [0.17, 1, 1, 3.17, 1, 1, 1, 0.16, 1, 1],
     [null, 0.18, 1, 1, 1, null, null, 17.13, 1, 1],
     [null, 17.14, 1, 1, null, null, 3.11, 1, 1, null],
     [0.9, 1, 1, null, 16, 3.16, 1, 1, 1, 4],

@@ -17,13 +17,35 @@ class View {
         this._drawBackground();
         this._drawGridlines();
 
-        // console.log(this.tileSize);
         matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
                 let nodeCornerX = x * this.tileSize;
                 let nodeCornerY = y * this.tileSize;
 
-                if (tile === 1) {
+                // the unplayable tiles without sums
+                if (!tile) {
+                    return;
+                }
+
+                // the unplayable tiles with sums
+                if (!(tile & 1)) {
+                    let sumToRight = (tile >> 1) & 63;
+                    if (sumToRight >= 2 && sumToRight <= 45) {
+                        this.ctx.font = this.tileSize / 3.5 + "px Arial";
+                        this.ctx.fillStyle = "white";
+                        this.ctx.fillText(sumToRight.toString(), nodeCornerX + (this.tileSize / 3) * 2, nodeCornerY + (this.tileSize / 3) * 2);
+                    }
+
+                    let sumToDown = (tile >> 7) & 63;
+                    if (sumToDown >= 2 && sumToDown <= 45) {
+                        this.ctx.font = this.tileSize / 3.5 + "px Arial";
+                        this.ctx.fillStyle = "white";
+                        this.ctx.fillText(sumToDown.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3);
+                    }
+                }
+
+                // the empty, playable tiles
+                if (tile & 1) {
                     this.ctx.beginPath();
                     this.ctx.fillStyle = "lightgray";
                     this.ctx.rect(nodeCornerX, nodeCornerY, this.tileSize, this.tileSize);
