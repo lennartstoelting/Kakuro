@@ -46,13 +46,15 @@ class View {
                     this.ctx.stroke();
                     this.ctx.fill();
 
-                    for (let i = 0; i < 9; i++) {
+                    for (let i = 1; i <= 9; i++) {
+                        if (!(tile & (2 ** i))) continue;
+
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "grey";
                         this.ctx.fillText(
-                            (i + 1).toString(),
-                            nodeCornerX + (this.tileSize / 3) * (i % 3),
-                            nodeCornerY + (this.tileSize / 3) * (Math.floor(i / 3) + 1)
+                            i.toString(),
+                            nodeCornerX + (this.tileSize / 3) * ((i - 1) % 3),
+                            nodeCornerY + (this.tileSize / 3) * Math.floor((i + 2) / 3)
                         );
                     }
 
