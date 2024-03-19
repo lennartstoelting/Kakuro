@@ -120,6 +120,9 @@ class Model {
                 // then functions could be the ones in cases where two tiles only each have two numbers left or three tiles each have three numbers left.
                 // those can also be eliminated from the others, similar to sudoku rules
                 // e.g. if two tiles only have 2 and 3 left, the other tiles can't have 2 and 3 in them
+                //
+                // also more functions with the sumtable, e.g. if for example in a row with three numbers, there is already a safe 7 in there, the only combinations left have to include a 7
+                // this might get rid of some combinations in the sumtable
             });
         });
 
