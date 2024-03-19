@@ -17,6 +17,7 @@ class View {
         this._drawBackground();
         this._drawGridlines();
 
+        // console.log(this.tileSize);
         matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
                 let nodeCornerX = x * this.tileSize;
@@ -28,6 +29,10 @@ class View {
                     this.ctx.rect(nodeCornerX, nodeCornerY, this.tileSize, this.tileSize);
                     this.ctx.stroke();
                     this.ctx.fill();
+
+                    this.ctx.font = this.tileSize / 3.5 + "px Arial";
+                    this.ctx.fillStyle = "grey";
+                    this.ctx.fillText("1", nodeCornerX + (this.tileSize / 3) * 0, nodeCornerY + (this.tileSize / 3) * 3);
                 }
             });
         });
