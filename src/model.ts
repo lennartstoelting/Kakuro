@@ -5,11 +5,11 @@ class Model {
     constructor() {
         // grundsätzlich: unspielbar, Summenfeld, spielbar
         // Idee: 13 bit Zahl (bit 0: spielbar ja oder nein? bit 1-12: Summenfeld)
-        this.matrix = this.initBinaryMatrix(medium2);
+        this.matrix = this.initBinaryMatrix(easy1);
         this.sumTable = this.initSumTable();
 
-        console.log(this.matrix);
-        console.log(this.sumTable);
+        // console.log(this.matrix);
+        // console.log(this.sumTable);
     }
 
     initBinaryMatrix(matrix: number[][]): number[][] {
@@ -103,26 +103,52 @@ class Model {
 
     solve(): void {
         let yTest = 3;
-        let xTest = 6;
+        let xTest = 8;
 
-        if (!(this.matrix[yTest][xTest] & 1)) {
-            console.log("tile is not playable");
-            return;
-        }
+        this.matrix.forEach((row, y) => {
+            row.forEach((tile, x) => {
+                // only solve the empty tiles
+                if (!(this.matrix[y][x] & 1)) {
+                    return;
+                }
 
-        let columnInfo = this._getColumnInfo(yTest, xTest);
-        let rowInfo = this._getRowInfo(yTest, xTest);
-        console.log("columnInfo: " + columnInfo + " rowInfo: " + rowInfo);
+                this._crossReferenceSumTableEntries(y, x);
 
-        this.matrix[yTest][xTest] = parseInt("1101111111", 2);
+                // next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
+                // this one already might need to be a recursive function to gain of of each won step
+                //
+                // then functions could be the ones in cases where two tiles only each have two numbers left or three tiles each have three numbers left.
+                // those can also be eliminated from the others, similar to sudoku rules
+                // e.g. if two tiles only have 2 and 3 left, the other tiles can't have 2 and 3 in them
+            });
+        });
+
+        // this.matrix[yTest][xTest] = parseInt("1101111111", 2);
     }
 
+    _crossReferenceSumTableEntries(y: number, x: number): void {
+        let colInfo = this._getColumnInfo(y, x);
+        let rowInfo = this._getRowInfo(y, x);
+
+        let rowCombinations = this.sumTable[rowInfo.sum][rowInfo.tileAmount].reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
+
+        let colCombinations = this.sumTable[colInfo.sum][colInfo.tileAmount].reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
+
+        let possibleCombinations = rowCombinations & colCombinations;
+        this.matrix[y][x] = (possibleCombinations << 1) | 1;
+    }
     /**
      * loops up to find the sum of the column
      * loops down from there to find the empty tiles below that sum
      * @returns array with the sum to the right and the amount of empty tiles in the column
      */
-    _getColumnInfo(y: number, x: number): number[] {
+    _getColumnInfo(y: number, x: number): any {
         while (y >= 0 && this.matrix[y][x] & 1) {
             y--;
         }
@@ -130,10 +156,10 @@ class Model {
         while (y + emptyTilesInColumn < 9 && this.matrix[y + emptyTilesInColumn + 1][x] & 1) {
             emptyTilesInColumn++;
         }
-        return [(this.matrix[y][x] >> 7) & 63, emptyTilesInColumn];
+        return { sum: (this.matrix[y][x] >> 7) & 63, tileAmount: emptyTilesInColumn };
     }
 
-    _getRowInfo(y: number, x: number): number[] {
+    _getRowInfo(y: number, x: number): any {
         while (x >= 0 && this.matrix[y][x] & 1) {
             x--;
         }
@@ -141,7 +167,8 @@ class Model {
         while (x + emptyTilesInRow < 9 && this.matrix[y][x + emptyTilesInRow + 1] & 1) {
             emptyTilesInRow++;
         }
-        return [(this.matrix[y][x] >> 1) & 63, emptyTilesInRow];
+        return { sum: (this.matrix[y][x] >> 1) & 63, tileAmount: emptyTilesInRow };
+        // return [(this.matrix[y][x] >> 1) & 63, emptyTilesInRow];
     }
 }
 
