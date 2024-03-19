@@ -1,0 +1,34 @@
+/* --------------------------- general --------------------------- */
+
+@import url("https://fonts.googleapis.com/css2?family=Caprasimo&display=swap");
+
+body {
+    margin: 0px;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+}
+
+/* --------------------------- board --------------------------- */
+
+@media all and (orientation: landscape) {
+    #board-container {
+        width: 100vh;
+        height: 100vh;
+    }
+}
+
+@media all and (orientation: portrait) {
+    #board-container {
+        width: 100vw;
+        height: 100vw;
+    }
+}
+
+/* --------------------------- info-container --------------------------- */
+
+#info-container {
+    flex-grow: 1;
+    text-align: center;
+    padding: 1%;
+}
