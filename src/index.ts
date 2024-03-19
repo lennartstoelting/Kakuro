@@ -3,14 +3,12 @@ import View from "./view";
 
 /** handles all input, checks in with model and displays the result with view */
 
-var tilesAcrossDefault = 10;
-
 class Controller {
     model: Model;
     view: View;
 
     constructor() {
-        this.model = new Model(tilesAcrossDefault);
+        this.model = new Model();
         this.view = new View();
 
         this._initEventListeners();

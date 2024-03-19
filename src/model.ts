@@ -1,11 +1,15 @@
 class Model {
     matrix: number[][];
+    sumTable: number[][][];
 
-    constructor(tilesAcross: number) {
+    constructor() {
         // grundsätzlich: unspielbar, Summenfeld, spielbar
         // Idee: 13 bit Zahl (bit 0: spielbar ja oder nein? bit 1-12: Summenfeld)
         this.matrix = this.initBinaryMatrix(easy1);
+        this.sumTable = this.initSumTable();
+
         console.log(this.matrix);
+        console.log(this.sumTable);
     }
 
     initBinaryMatrix(matrix: number[][]): number[][] {
@@ -22,7 +26,10 @@ class Model {
                     return;
                 }
 
-                // for all other cases, we see them as a decimal number. the 0th bit is 0, then the next 6 bit incript the two numbers to the right of the comma, and the last 6 bit incript the two numbers to the left of the comma
+                // for all other cases, we see them as a decimal number.
+                // the 0th bit is 0,
+                // then the next 6 bit incript the two numbers to the right of the comma,
+                // and the last 6 bit incript the two numbers to the left of the comma
                 let colAndRow = tile
                     .toFixed(2)
                     .split(".")
@@ -46,6 +53,52 @@ class Model {
             binaryMatrix.push(binaryRow);
         });
         return binaryMatrix;
+    }
+
+    /**
+     * i want to do a general table where all the combinations of 2 up to 9 numbers are listed and the sum of them is calculated
+     * the resulting sum is the index of where to find these combinations in the table
+     * at that index, the combinations are stored as a 9 bit number, where the bit is 1 if the number is in the combination
+     * the table is a 45 element array
+     * at each index, the amount of numbers that make up the sum is stored at the index of it's amount
+     * the matrix looks as follows:
+     *
+     * [[],                         0
+     *  [],                         1
+     *  [],                         2
+     *  [[],[],[3]],                3
+     *  [[],[],[5]],                4
+     *  [[],[],[6,9]],              5
+     *  [[],[],[10,17],[7]]]        6
+     *  [[],[],[33,18, 12],[11]]    7
+     * the first index is the sum (#45), the second index is the amount of numbers that make up the sum(#9),
+     * each of the numbers from that point are meant to be read in binary, having a 1 everywhere the number is in the combination
+     */
+    initSumTable(): number[][][] {
+        let table: number[][][] = Array(46)
+            .fill(0)
+            .map(() =>
+                Array(10)
+                    .fill(0)
+                    .map(() => [])
+            );
+
+        for (let binaryCombination = 3; binaryCombination <= parseInt("111111111", 2); binaryCombination++) {
+            let amountOfOnes = binaryCombination.toString(2).split("1").length - 1;
+            if (amountOfOnes === 1) {
+                continue;
+            }
+            let sum = 0;
+            for (let j = 0; j < 9; j++) {
+                if (binaryCombination & (2 ** j)) {
+                    sum += j + 1;
+                }
+            }
+            // console.log("sum: " + sum + " amountOfOnes: " + amountOfOnes + " binaryCombination: " + binaryCombination.toString(2));
+            table[sum][amountOfOnes].push(binaryCombination);
+        }
+
+        return table;
     }
 }
 
