@@ -1,6 +1,7 @@
 class View {
     board: HTMLCanvasElement;
     tileSize: number;
+    tilePadding: number;
     private boardSideLength: number;
     private borderRadius: number;
 
@@ -27,14 +28,31 @@ class View {
                     if (sumToRight) {
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "white";
-                        this.ctx.fillText(sumToRight.toString(), nodeCornerX + (this.tileSize / 3) * 2, nodeCornerY + (this.tileSize / 3) * 2);
+                        this.ctx.fillText(
+                            sumToRight.toString(),
+                            nodeCornerX + (this.tileSize / 3) * 2 - this.tilePadding / 2,
+                            nodeCornerY + (this.tileSize / 3) * 2 - this.tilePadding
+                        );
                     }
 
                     let sumToDown = (tile >> 7) & 63;
                     if (sumToDown) {
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "white";
-                        this.ctx.fillText(sumToDown.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3);
+                        this.ctx.fillText(
+                            sumToDown.toString(),
+                            nodeCornerX + (this.tileSize / 3) * 1,
+                            nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding
+                        );
+                    }
+
+                    if (sumToDown && sumToRight) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(nodeCornerX, nodeCornerY);
+                        this.ctx.lineTo(nodeCornerX + this.tileSize, nodeCornerY + this.tileSize);
+                        this.ctx.lineWidth = this.tileSize / 25;
+                        this.ctx.strokeStyle = "white";
+                        this.ctx.stroke();
                     }
                     return;
                 }
@@ -51,7 +69,11 @@ class View {
                     let safeNumber = tile.toString(2).split("1")[1].length + 1;
                     this.ctx.font = this.tileSize + "px Arial";
                     this.ctx.fillStyle = "black";
-                    this.ctx.fillText(safeNumber.toString(), nodeCornerX + (this.tileSize / 3) * 0, nodeCornerY + (this.tileSize / 3) * 3);
+                    this.ctx.fillText(
+                        safeNumber.toString(),
+                        nodeCornerX + (this.tileSize / 3) * 0 + this.tilePadding * 3,
+                        nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding * 2
+                    );
                     return;
                 }
 
@@ -63,8 +85,8 @@ class View {
                     this.ctx.fillStyle = "grey";
                     this.ctx.fillText(
                         i.toString(),
-                        nodeCornerX + (this.tileSize / 3) * ((i - 1) % 3),
-                        nodeCornerY + (this.tileSize / 3) * Math.floor((i + 2) / 3)
+                        nodeCornerX + (this.tileSize / 3) * ((i - 1) % 3) + this.tilePadding,
+                        nodeCornerY + (this.tileSize / 3) * Math.floor((i + 2) / 3) - this.tilePadding
                     );
                 }
 
@@ -92,6 +114,7 @@ class View {
         this.ctx = this.board.getContext("2d");
         this.boardSideLength = this.board.clientWidth;
         this.tileSize = this.boardSideLength / matrix.length;
+        this.tilePadding = this.tileSize / 15;
     }
 
     private _drawBackground(): void {
