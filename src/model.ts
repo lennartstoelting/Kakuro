@@ -4,11 +4,11 @@ class Model {
     constructor(tilesAcross: number) {
         // grundsätzlich: unspielbar, Summenfeld, spielbar
         // Idee: 13 bit Zahl (bit 0: spielbar ja oder nein? bit 1-12: Summenfeld)
-        this.matrix = this.matrixToBinaryMatrix(test);
+        this.matrix = this.initBinaryMatrix(test);
         console.log(this.matrix);
     }
 
-    matrixToBinaryMatrix(matrix: number[][]): number[][] {
+    initBinaryMatrix(matrix: number[][]): number[][] {
         let binaryMatrix: number[][] = [];
         matrix.forEach((row, y) => {
             let binaryRow: number[] = [];
@@ -19,11 +19,12 @@ class Model {
                 }
 
                 if (tile === 1) {
-                    binaryRow.push(511);
+                    binaryRow.push(parseInt("1111111111", 2));
                     return;
                 }
 
                 // for all other cases, we see them as a decimal number. the 0th bit is 0, then the next 6 bit incript the two numbers to the right of the comma, and the last 6 bit incript the two numbers to the left of the comma
+                // also this needs to check for potential errors in the input matrix
                 let colAndRow = tile.toFixed(2).split(".");
                 let binaryRight = parseInt(colAndRow[1]).toString(2);
                 let binaryDown = parseInt(colAndRow[0]).toString(2);

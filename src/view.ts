@@ -15,29 +15,23 @@ class View {
     public drawBoard(matrix: number[][]): void {
         this._createCanvas(matrix);
         this._drawBackground();
-        this._drawGridlines();
 
         matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
                 let nodeCornerX = x * this.tileSize;
                 let nodeCornerY = y * this.tileSize;
 
-                // the unplayable tiles without sums
-                if (!tile) {
-                    return;
-                }
-
                 // the unplayable tiles with sums
                 if (!(tile & 1)) {
                     let sumToRight = (tile >> 1) & 63;
-                    if (sumToRight >= 2 && sumToRight <= 45) {
+                    if (sumToRight) {
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "white";
                         this.ctx.fillText(sumToRight.toString(), nodeCornerX + (this.tileSize / 3) * 2, nodeCornerY + (this.tileSize / 3) * 2);
                     }
 
                     let sumToDown = (tile >> 7) & 63;
-                    if (sumToDown >= 2 && sumToDown <= 45) {
+                    if (sumToDown) {
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "white";
                         this.ctx.fillText(sumToDown.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3);
@@ -52,12 +46,25 @@ class View {
                     this.ctx.stroke();
                     this.ctx.fill();
 
-                    this.ctx.font = this.tileSize / 3.5 + "px Arial";
-                    this.ctx.fillStyle = "grey";
-                    this.ctx.fillText("1", nodeCornerX + (this.tileSize / 3) * 0, nodeCornerY + (this.tileSize / 3) * 3);
+                    for (let i = 0; i < 9; i++) {
+                        this.ctx.font = this.tileSize / 3.5 + "px Arial";
+                        this.ctx.fillStyle = "grey";
+                        this.ctx.fillText(
+                            (i + 1).toString(),
+                            nodeCornerX + (this.tileSize / 3) * (i % 3),
+                            nodeCornerY + (this.tileSize / 3) * (Math.floor(i / 3) + 1)
+                        );
+                    }
+
+                    // this.ctx.font = this.tileSize / 3.5 + "px Arial";
+                    // this.ctx.fillStyle = "grey";
+                    // this.ctx.fillText("1", nodeCornerX + (this.tileSize / 3) * 0, nodeCornerY + (this.tileSize / 3) * 3);
                 }
             });
         });
+
+        // there needs to be a little adjustments because of the way the canvas draws the numbers but that is purely cosmetic
+        this._drawGridlines();
 
         // matrix.forEach((row, y) => {
         //     row.forEach((tile, x) => {
