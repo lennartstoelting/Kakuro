@@ -101,18 +101,19 @@ export class Model {
                     return;
                 }
 
-                let colInfo = this._getColumnInfo(y, x);
                 let rowInfo = this._getRowInfo(y, x);
-
-                // nächste Lösungsregel: Restsumme
-                // nehmen wir den Fall sum: 20, emptyTiles: 4 und zwei der Tiles sind jeweils belegt mit 3 und 1
-                // dann können wir die restlichen Tiles auf 16 reduzieren
-                // nun müssen wir also nur noch die Permutationen für 16 und 2 Tiles finden.
+                let colInfo = this._getColumnInfo(y, x);
 
                 // all permutations with given tile amount to sum
                 let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length];
                 let colPermutations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length];
 
+                rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
+                colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
+
+                // dieser ganze Teil sowie die sudoku rules ließen sich ersetzen durch eine Restsummenberechnung
+
+                // if the row (or column) is already has fixed tiles, the permutations have to include these fixed numbers
                 let fixedInRow = 0;
                 rowInfo.emptyTileCoords.forEach((coords: any) => {
                     if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
@@ -127,7 +128,6 @@ export class Model {
                 });
 
                 // filter the permutations by the numbers that are already fixed in the tile, therefore having to be included in the final permutation
-
                 if (fixedInRow) {
                     rowPermutations = rowPermutations.filter((permutation) => (permutation & fixedInRow) === fixedInRow);
                 }
@@ -135,15 +135,9 @@ export class Model {
                     colPermutations = colPermutations.filter((permutation) => (permutation & fixedInCol) === fixedInCol);
                 }
 
-                rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
-                colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
-
                 // for this current tile, the permutations are combined to a superposition
                 let combinedRowPermutations = this._reduceToSuperposition(rowPermutations);
                 let combinedColPermutations = this._reduceToSuperposition(colPermutations);
-
-                // both superpositions are being combined and then applied to the tile
-                tile.num &= combinedRowPermutations & combinedColPermutations;
 
                 // the superposition includes the all leftover permutations after filtering, so the permutations in the other tiles in the row and column can be reduced
                 rowInfo.emptyTileCoords.forEach((coords: any) => {
@@ -154,19 +148,13 @@ export class Model {
                     this.matrix[coords[0]][coords[1]].num &= combinedColPermutations;
                 });
 
+                // both superpositions are being combined and then applied to the tile
+                tile.num &= combinedRowPermutations & combinedColPermutations;
+
                 this._sudokuRules(y, x);
 
                 // debugging console logs
                 if (y == 3 && x > 4) {
-                    // rowInfo.emptyTileCoords.forEach((coords: any) => {
-                    //     if (coords[0] == y && coords[1] == x) {
-                    //         return;
-                    //     }
-                    //     console.log(coords);
-                    // });
-
-                    let temp = rowPermutations.filter((permutation) => (permutation & fixedInRow) === fixedInRow);
-
                     console.log(
                         "y: " +
                             y +
@@ -186,7 +174,7 @@ export class Model {
                             "\nfixedInRow " +
                             fixedInRow.toString(2) +
                             "\nrowPermutations with only fixed numbers " +
-                            temp.map((el) => el.toString(2)) +
+                            rowPermutations.filter((permutation) => (permutation & fixedInRow) === fixedInRow).map((el) => el.toString(2)) +
                             "\n" +
                             colInfo.emptyTileCoords.length +
                             " tiles in this column sum to " +
