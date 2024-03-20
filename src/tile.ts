@@ -1,9 +1,4 @@
-export class Tile {
-    constructor() {
-        // Common properties and methods for all tiles
-    }
-    // Common properties and methods for all tiles
-}
+export class Tile {}
 
 export class PlayableTile extends Tile {
     num: number;

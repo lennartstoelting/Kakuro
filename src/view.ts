@@ -1,6 +1,6 @@
 import { Tile, PlayableTile, UnplayableTile } from "./tile";
 
-class View {
+export class View {
     board: HTMLCanvasElement;
     tileSize: number;
     tilePadding: number;
@@ -26,80 +26,79 @@ class View {
 
                 // the unplayable tiles with sums
                 if (tile instanceof UnplayableTile) {
-                    let sumToRight = tile.rowSum;
-                    if (sumToRight) {
-                        this.ctx.font = this.tileSize / 3.5 + "px Arial";
-                        this.ctx.fillStyle = "white";
-                        this.ctx.fillText(
-                            sumToRight.toString(),
-                            nodeCornerX + (this.tileSize / 3) * 2 - this.tilePadding / 2,
-                            nodeCornerY + (this.tileSize / 3) * 2 - this.tilePadding
-                        );
-                    }
-
-                    let sumToDown = tile.colSum;
-                    if (sumToDown) {
-                        this.ctx.font = this.tileSize / 3.5 + "px Arial";
-                        this.ctx.fillStyle = "white";
-                        this.ctx.fillText(
-                            sumToDown.toString(),
-                            nodeCornerX + (this.tileSize / 3) * 1,
-                            nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding
-                        );
-                    }
-
-                    if (sumToDown && sumToRight) {
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(nodeCornerX, nodeCornerY);
-                        this.ctx.lineTo(nodeCornerX + this.tileSize, nodeCornerY + this.tileSize);
-                        this.ctx.lineWidth = this.tileSize / 25;
-                        this.ctx.strokeStyle = "white";
-                        this.ctx.stroke();
-                    }
+                    this._drawUnplayableTile(tile, nodeCornerX, nodeCornerY);
                     return;
+                } else {
+                    this._drawPlayableTile(tile, nodeCornerX, nodeCornerY);
                 }
-
-                // the empty, playable tiles
-                this.ctx.beginPath();
-                this.ctx.fillStyle = "lightgray";
-                this.ctx.rect(nodeCornerX, nodeCornerY, this.tileSize, this.tileSize);
-                this.ctx.stroke();
-                this.ctx.fill();
-
-                // the already safe numbers in the tiles (e.g. if the tile has 0010000001 written, 7 is the only number left to be placed in the tile)
-                let onlyPossibleNumber = tile.onlyPossibleNumber();
-                if (onlyPossibleNumber) {
-                    this.ctx.font = this.tileSize + "px Arial";
-                    this.ctx.fillStyle = "black";
-                    this.ctx.fillText(
-                        onlyPossibleNumber.toString(),
-                        nodeCornerX + (this.tileSize / 3) * 0 + this.tilePadding * 3,
-                        nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding * 2
-                    );
-                    return;
-                }
-
-                // the noted numbers in the tiles
-                for (let i = 0; i < 9; i++) {
-                    if (!(tile.num & (2 ** i))) continue;
-
-                    this.ctx.font = this.tileSize / 3.5 + "px Arial";
-                    this.ctx.fillStyle = "grey";
-                    this.ctx.fillText(
-                        (i + 1).toString(),
-                        nodeCornerX + (this.tileSize / 3) * (i % 3) + this.tilePadding,
-                        nodeCornerY + (this.tileSize / 3) * Math.floor((i + 3) / 3) - this.tilePadding
-                    );
-                }
-
-                // this.ctx.font = this.tileSize / 3.5 + "px Arial";
-                // this.ctx.fillStyle = "grey";
-                // this.ctx.fillText("1", nodeCornerX + (this.tileSize / 3) * 0, nodeCornerY + (this.tileSize / 3) * 3);
             });
         });
 
-        // there needs to be a little adjustments because of the way the canvas draws the numbers but that is purely cosmetic
         this._drawGridlines();
+    }
+
+    private _drawUnplayableTile(tile: UnplayableTile, nodeCornerX: number, nodeCornerY: number): void {
+        let sumRight = tile.rowSum;
+        if (sumRight) {
+            this.ctx.font = this.tileSize / 3.5 + "px Arial";
+            this.ctx.fillStyle = "white";
+            this.ctx.fillText(
+                sumRight.toString(),
+                nodeCornerX + (this.tileSize / 3) * 2 - this.tilePadding / 2,
+                nodeCornerY + (this.tileSize / 3) * 2 - this.tilePadding
+            );
+        }
+
+        let sumDown = tile.colSum;
+        if (sumDown) {
+            this.ctx.font = this.tileSize / 3.5 + "px Arial";
+            this.ctx.fillStyle = "white";
+            this.ctx.fillText(sumDown.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding);
+        }
+
+        if (sumDown && sumRight) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(nodeCornerX, nodeCornerY);
+            this.ctx.lineTo(nodeCornerX + this.tileSize, nodeCornerY + this.tileSize);
+            this.ctx.lineWidth = this.tileSize / 25;
+            this.ctx.strokeStyle = "white";
+            this.ctx.stroke();
+        }
+    }
+
+    private _drawPlayableTile(tile: PlayableTile, nodeCornerX: number, nodeCornerY: number): void {
+        // background for playable tile
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "lightgray";
+        this.ctx.rect(nodeCornerX, nodeCornerY, this.tileSize, this.tileSize);
+        this.ctx.stroke();
+        this.ctx.fill();
+
+        // the already safe numbers in the tiles (e.g. if the tile has 0010000001 written, 7 is the only number left to be placed in the tile)
+        let onlyPossibleNumber = tile.onlyPossibleNumber();
+        if (onlyPossibleNumber) {
+            this.ctx.font = this.tileSize + "px Arial";
+            this.ctx.fillStyle = "black";
+            this.ctx.fillText(
+                onlyPossibleNumber.toString(),
+                nodeCornerX + (this.tileSize / 3) * 0 + this.tilePadding * 3,
+                nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding * 2
+            );
+            return;
+        }
+
+        // the noted numbers in the tiles
+        for (let i = 0; i < 9; i++) {
+            if (!(tile.num & (2 ** i))) continue;
+
+            this.ctx.font = this.tileSize / 3.5 + "px Arial";
+            this.ctx.fillStyle = "grey";
+            this.ctx.fillText(
+                (i + 1).toString(),
+                nodeCornerX + (this.tileSize / 3) * (i % 3) + this.tilePadding,
+                nodeCornerY + (this.tileSize / 3) * Math.floor((i + 3) / 3) - this.tilePadding
+            );
+        }
     }
 
     private _createCanvas(matrix: number[][]): void {
@@ -140,5 +139,3 @@ class View {
         this.ctx.stroke();
     }
 }
-
-export default View;

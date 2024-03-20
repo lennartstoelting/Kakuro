@@ -1,5 +1,6 @@
-import Model from "./model";
-import View from "./view";
+import { Model } from "./model";
+import { View } from "./view";
+import { levels } from "./levels";
 
 /** handles all input, checks in with model and displays the result with view */
 
@@ -11,7 +12,7 @@ class Controller {
     solveButton: HTMLButtonElement;
 
     constructor() {
-        this.model = new Model();
+        this.model = new Model(levels.easy[1]);
         this.view = new View();
 
         this._getDomElements();

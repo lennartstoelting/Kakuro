@@ -1,11 +1,11 @@
 import { Tile, PlayableTile, UnplayableTile } from "./tile";
 
-class Model {
+export class Model {
     matrix: any[][];
     sumTable: number[][][];
 
-    constructor() {
-        this.matrix = this.initBinaryMatrix(medium2);
+    constructor(level: number[][]) {
+        this.matrix = this.initBinaryMatrix(level);
         this.sumTable = this.initSumTable();
     }
 
@@ -234,31 +234,3 @@ class Model {
         return { sum: this.matrix[y][x].rowSum, emptyTileCoords: emptyTilesInfo };
     }
 }
-
-export default Model;
-
-const easy1: number[][] = [
-    [0, 0, 45, 3, 0, 0, 0, 3, 45, 0],
-    [0, 17.08, 1, 1, 0, 16, 4.03, 1, 1, 0],
-    [0.11, 1, 1, 1, 16.17, 1, 1, 1, 1, 17],
-    [0.17, 1, 1, 3.17, 1, 1, 1, 0.16, 1, 1],
-    [0, 0.18, 1, 1, 1, 0, 0, 17.13, 1, 1],
-    [0, 17.04, 1, 1, 0, 0, 3.11, 1, 1, 0],
-    [0.09, 1, 1, 0, 16, 3.16, 1, 1, 1, 4],
-    [0.14, 1, 1, 3.1, 1, 1, 1, 16.12, 1, 1],
-    [0, 0.19, 1, 1, 1, 1, 0.18, 1, 1, 1],
-    [0, 0.05, 1, 1, 0, 0, 0.1, 1, 1, 0],
-];
-
-const medium2: number[][] = [
-    [0, 0, 29, 4, 0, 7, 34, 16, 0, 0],
-    [0, 0.08, 1, 1, 3.17, 1, 1, 1, 0, 0],
-    [0, 3.31, 1, 1, 1, 1, 1, 1, 0, 0],
-    [0.1, 1, 1, 24.1, 1, 1, 1, 24, 0, 0],
-    [0.16, 1, 1, 1, 15, 0.13, 1, 1, 0, 0],
-    [0, 0, 0.13, 1, 1, 0.16, 1, 1, 10, 16],
-    [0, 0, 0.1, 1, 1, 24, 3.16, 1, 1, 1],
-    [0, 0, 0, 17.14, 1, 1, 1, 17.11, 1, 1],
-    [0, 0, 0.3, 1, 1, 1, 1, 1, 1, 0],
-    [0, 0, 0.18, 1, 1, 1, 0.13, 1, 1, 0],
-];
