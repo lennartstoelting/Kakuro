@@ -1,3 +1,5 @@
+import { Tile, PlayableTile, UnplayableTile } from "./tile";
+
 class View {
     board: HTMLCanvasElement;
     tileSize: number;
@@ -13,7 +15,7 @@ class View {
         this.borderRadius = 1;
     }
 
-    public drawBoard(matrix: number[][]): void {
+    public drawBoard(matrix: any[][]): void {
         this._createCanvas(matrix);
         this._drawBackground();
 
@@ -23,8 +25,8 @@ class View {
                 let nodeCornerY = y * this.tileSize;
 
                 // the unplayable tiles with sums
-                if (!(tile & 1)) {
-                    let sumToRight = (tile >> 1) & 63;
+                if (tile instanceof UnplayableTile) {
+                    let sumToRight = tile.rowSum;
                     if (sumToRight) {
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "white";
@@ -35,7 +37,7 @@ class View {
                         );
                     }
 
-                    let sumToDown = (tile >> 7) & 63;
+                    let sumToDown = tile.colSum;
                     if (sumToDown) {
                         this.ctx.font = this.tileSize / 3.5 + "px Arial";
                         this.ctx.fillStyle = "white";
@@ -65,12 +67,12 @@ class View {
                 this.ctx.fill();
 
                 // the already safe numbers in the tiles (e.g. if the tile has 0010000001 written, 7 is the only number left to be placed in the tile)
-                if (tile.toString(2).split("1").length == 3) {
-                    let safeNumber = tile.toString(2).split("1")[1].length + 1;
+                let onlyPossibleNumber = tile.onlyPossibleNumber();
+                if (onlyPossibleNumber) {
                     this.ctx.font = this.tileSize + "px Arial";
                     this.ctx.fillStyle = "black";
                     this.ctx.fillText(
-                        safeNumber.toString(),
+                        onlyPossibleNumber.toString(),
                         nodeCornerX + (this.tileSize / 3) * 0 + this.tilePadding * 3,
                         nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding * 2
                     );
@@ -78,15 +80,15 @@ class View {
                 }
 
                 // the noted numbers in the tiles
-                for (let i = 1; i <= 9; i++) {
-                    if (!(tile & (2 ** i))) continue;
+                for (let i = 0; i < 9; i++) {
+                    if (!(tile.possibleNumbers & (2 ** i))) continue;
 
                     this.ctx.font = this.tileSize / 3.5 + "px Arial";
                     this.ctx.fillStyle = "grey";
                     this.ctx.fillText(
-                        i.toString(),
-                        nodeCornerX + (this.tileSize / 3) * ((i - 1) % 3) + this.tilePadding,
-                        nodeCornerY + (this.tileSize / 3) * Math.floor((i + 2) / 3) - this.tilePadding
+                        (i + 1).toString(),
+                        nodeCornerX + (this.tileSize / 3) * (i % 3) + this.tilePadding,
+                        nodeCornerY + (this.tileSize / 3) * Math.floor((i + 3) / 3) - this.tilePadding
                     );
                 }
 

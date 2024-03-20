@@ -1,5 +1,7 @@
+import { Tile, PlayableTile, UnplayableTile } from "./tile";
+
 class Model {
-    matrix: number[][];
+    matrix: any[][];
     sumTable: number[][][];
 
     constructor() {
@@ -12,17 +14,17 @@ class Model {
         // console.log(this.sumTable);
     }
 
-    initBinaryMatrix(matrix: number[][]): number[][] {
-        let binaryMatrix: number[][] = [];
+    initBinaryMatrix(matrix: number[][]): Tile[][] {
+        let newMatrix: any[][] = [];
         matrix.forEach((row, y) => {
-            let binaryRow: number[] = [];
+            let rowArray: Tile[] = [];
             row.forEach((tile, x) => {
                 if (tile === 0) {
-                    binaryRow.push(0);
+                    rowArray.push(new UnplayableTile(0, 0));
                     return;
                 }
                 if (tile === 1) {
-                    binaryRow.push(parseInt("1".repeat(10), 2));
+                    rowArray.push(new PlayableTile(parseInt("1".repeat(9), 2)));
                     return;
                 }
 
@@ -46,13 +48,11 @@ class Model {
                     throw new Error("invalid input matrix: sum of row at x: " + x + " and y: " + y + " is given as " + colAndRow[1]);
                 }
 
-                let colAndRowBinary = colAndRow.map((sum) => ("000000" + sum.toString(2)).slice(-6));
-                let binary = parseInt(colAndRowBinary[0] + colAndRowBinary[1], 2) << 1;
-                binaryRow.push(binary);
+                rowArray.push(new UnplayableTile(colAndRow[0], colAndRow[1]));
             });
-            binaryMatrix.push(binaryRow);
+            newMatrix.push(rowArray);
         });
-        return binaryMatrix;
+        return newMatrix;
     }
 
     /**
@@ -108,12 +108,13 @@ class Model {
         this.matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
                 // only solve the empty tiles
-                if (!(this.matrix[y][x] & 1)) {
+                if (this.matrix[y][x] instanceof UnplayableTile) {
                     return;
                 }
 
-                this.matrix[y][x] &= this._crossReferenceSumTableEntries(y, x);
-                this.matrix[y][x] &= this._sudokuRules(y, x);
+                // console.log(this._crossReferenceSumTableEntries(y, x));
+                this.matrix[y][x].possibleNumbers &= this._crossReferenceSumTableEntries(y, x);
+                this.matrix[y][x].possibleNumbers &= this._sudokuRules(y, x);
                 // next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
                 // this one already might need to be a recursive function to gain of of each won step
                 //
@@ -133,18 +134,18 @@ class Model {
         let colInfo = this._getColumnInfo(y, x);
         let rowInfo = this._getRowInfo(y, x);
 
-        let rowCombinations = this.sumTable[rowInfo.sum][rowInfo.tileAmount].reduce((acc, cur) => {
-            acc |= cur;
-            return acc;
-        }, 0);
-
         let colCombinations = this.sumTable[colInfo.sum][colInfo.tileAmount].reduce((acc, cur) => {
             acc |= cur;
             return acc;
         }, 0);
 
+        let rowCombinations = this.sumTable[rowInfo.sum][rowInfo.tileAmount].reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
+
         let possibleCombinations = rowCombinations & colCombinations;
-        return (possibleCombinations << 1) | 1;
+        return possibleCombinations;
     }
     /**
      * loops up to find the sum of the column
@@ -152,30 +153,29 @@ class Model {
      * @returns array with the sum to the right and the amount of empty tiles in the column
      */
     _getColumnInfo(y: number, x: number): any {
-        while (y >= 0 && this.matrix[y][x] & 1) {
+        while (y >= 0 && this.matrix[y][x] instanceof PlayableTile) {
             y--;
         }
         let emptyTilesInColumn = 1;
-        while (y + emptyTilesInColumn < 9 && this.matrix[y + emptyTilesInColumn + 1][x] & 1) {
+        while (y + emptyTilesInColumn < 9 && this.matrix[y + emptyTilesInColumn + 1][x] instanceof PlayableTile) {
             emptyTilesInColumn++;
         }
-        return { sum: (this.matrix[y][x] >> 7) & 63, tileAmount: emptyTilesInColumn };
+        return { sum: this.matrix[y][x].colSum, tileAmount: emptyTilesInColumn };
     }
 
     _getRowInfo(y: number, x: number): any {
-        while (x >= 0 && this.matrix[y][x] & 1) {
+        while (x >= 0 && this.matrix[y][x] instanceof PlayableTile) {
             x--;
         }
         let emptyTilesInRow = 1;
-        while (x + emptyTilesInRow < 9 && this.matrix[y][x + emptyTilesInRow + 1] & 1) {
+        while (x + emptyTilesInRow < 9 && this.matrix[y][x + emptyTilesInRow + 1] instanceof PlayableTile) {
             emptyTilesInRow++;
         }
-        return { sum: (this.matrix[y][x] >> 1) & 63, tileAmount: emptyTilesInRow };
-        // return [(this.matrix[y][x] >> 1) & 63, emptyTilesInRow];
+        return { sum: this.matrix[y][x].rowSum, tileAmount: emptyTilesInRow };
     }
 
     _sudokuRules(y: number, x: number): number {
-        return 1023;
+        return 511;
     }
 }
 

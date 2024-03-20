@@ -1,9 +1,17 @@
-class Tile {
+export class Tile {
+    constructor() {
+        // Common properties and methods for all tiles
+    }
     // Common properties and methods for all tiles
 }
 
-class PlayableTile extends Tile {
+export class PlayableTile extends Tile {
     possibleNumbers: number;
+
+    constructor(possibleNumbers: number) {
+        super();
+        this.possibleNumbers = possibleNumbers;
+    }
 
     // 001000000 -> 7
     // 110110100 -> 0
@@ -15,9 +23,15 @@ class PlayableTile extends Tile {
     }
 }
 
-class UnplayableTile extends Tile {
+export class UnplayableTile extends Tile {
     colSum: number;
     rowSum: number;
+
+    constructor(colSum: number, rowSum: number) {
+        super();
+        this.colSum = colSum;
+        this.rowSum = rowSum;
+    }
 
     isEmpty(): boolean {
         return this.colSum === 0 && this.rowSum === 0;
