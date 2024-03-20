@@ -79,11 +79,8 @@ export class Model {
                     .map(() => [])
             );
 
-        for (let binaryCombination = 3; binaryCombination <= parseInt("111111111", 2); binaryCombination++) {
+        for (let binaryCombination = 1; binaryCombination <= parseInt("111111111", 2); binaryCombination++) {
             let amountOfOnes = binaryCombination.toString(2).split("1").length - 1;
-            if (amountOfOnes === 1) {
-                continue;
-            }
             let sum = 0;
             for (let j = 0; j < 9; j++) {
                 if (binaryCombination & (2 ** j)) {
@@ -107,11 +104,37 @@ export class Model {
                 let colInfo = this._getColumnInfo(y, x);
                 let rowInfo = this._getRowInfo(y, x);
 
+                // nächste Lösungsregel: Restsumme
+                // nehmen wir den Fall sum: 20, emptyTiles: 4 und zwei der Tiles sind jeweils belegt mit 3 und 1
+                // dann können wir die restlichen Tiles auf 16 reduzieren
+                // nun müssen wir also nur noch die Permutationen für 16 und 2 Tiles finden.
+
                 // all permutations with given tile amount to sum
                 let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length];
                 let colPermutations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length];
 
+                let fixedInRow = 0;
+                rowInfo.emptyTileCoords.forEach((coords: any) => {
+                    if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
+                        fixedInRow |= this.matrix[coords[0]][coords[1]].num;
+                    }
+                });
+                let fixedInCol = 0;
+                colInfo.emptyTileCoords.forEach((coords: any) => {
+                    if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
+                        fixedInCol |= this.matrix[coords[0]][coords[1]].num;
+                    }
+                });
+
                 // filter the permutations by the numbers that are already fixed in the tile, therefore having to be included in the final permutation
+
+                if (fixedInRow) {
+                    rowPermutations = rowPermutations.filter((permutation) => (permutation & fixedInRow) === fixedInRow);
+                }
+                if (fixedInCol) {
+                    colPermutations = colPermutations.filter((permutation) => (permutation & fixedInCol) === fixedInCol);
+                }
+
                 rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
                 colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
 
@@ -132,15 +155,17 @@ export class Model {
                 });
 
                 this._sudokuRules(y, x);
-                /*
+
                 // debugging console logs
-                if (y == 1 && x <= 3) {
-                    rowInfo.emptyTileCoords.forEach((coords: any) => {
-                        if (coords[0] == y && coords[1] == x) {
-                            return;
-                        }
-                        console.log(coords);
-                    });
+                if (y == 3 && x > 4) {
+                    // rowInfo.emptyTileCoords.forEach((coords: any) => {
+                    //     if (coords[0] == y && coords[1] == x) {
+                    //         return;
+                    //     }
+                    //     console.log(coords);
+                    // });
+
+                    let temp = rowPermutations.filter((permutation) => (permutation & fixedInRow) === fixedInRow);
 
                     console.log(
                         "y: " +
@@ -158,6 +183,10 @@ export class Model {
                             rowPermutations.map((el) => el.toString(2)) +
                             "\ncombinedRowPermutations " +
                             combinedRowPermutations.toString(2) +
+                            "\nfixedInRow " +
+                            fixedInRow.toString(2) +
+                            "\nrowPermutations with only fixed numbers " +
+                            temp.map((el) => el.toString(2)) +
                             "\n" +
                             colInfo.emptyTileCoords.length +
                             " tiles in this column sum to " +
@@ -168,7 +197,6 @@ export class Model {
                             combinedColPermutations.toString(2)
                     );
                 }
-                */
             });
         });
     }
@@ -236,7 +264,7 @@ export class Model {
 
 /**
  * TODO:
- * - aesthetics:                make the colors prettier to look at in view
+ * - aesthetics:                make the colors prettier to look at in view (maybe only show little numbers if any sort of solving has been started)
  * - aesthetics + mechanics:    after each click of the solve button, color the tiles that have been affected by the solve change function (this requires to save a copy of the previous state of the matrix)
  * - mechanics:                 make a solveAll button that repeatedly/recursively calls the solve function until no more changes can be made
  * - readability:               make the code more readable by splitting the solve function into smaller functions if possible
