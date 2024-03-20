@@ -7,8 +7,6 @@ class Model {
     constructor() {
         this.matrix = this.initBinaryMatrix(easy1);
         this.sumTable = this.initSumTable();
-
-        console.log(this._getRowInfo(4, 3));
     }
 
     initBinaryMatrix(matrix: number[][]): Tile[][] {
@@ -112,7 +110,8 @@ class Model {
 
                 // console.log(this._permutationsFromSumTable(y, x));
                 this.matrix[y][x].possibleNumbers &= this._permutationsFromSumTable(y, x);
-                this.matrix[y][x].possibleNumbers &= this._sudokuRules(y, x);
+                this._sudokuRules(y, x);
+                // this.matrix[y][x].possibleNumbers &= this._sudokuRules(y, x);
                 /**
                  * next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
                  * this one already might need to be a recursive function to gain of of each won step
@@ -176,14 +175,28 @@ class Model {
         return { sum: this.matrix[y][x].rowSum, emptyTileCoords: emptyTilesInfo };
     }
 
-    /**
-     * loops up to find the sum of the column
-     * loops down from there to find the empty tiles below that sum
-     * @returns array with the sum to the right and the amount of empty tiles in the column
-     */
+    _sudokuRules(y: number, x: number): void {
+        let onlyPossibleNumber = this.matrix[y][x].onlyPossibleNumber();
+        if (!onlyPossibleNumber) {
+            return;
+        }
 
-    _sudokuRules(y: number, x: number): number {
-        return 511;
+        let colInfo = this._getColumnInfo(y, x);
+        colInfo.emptyTileCoords = colInfo.emptyTileCoords.filter((coord: any) => {
+            return !(coord[0] === y && coord[1] === x);
+        });
+        colInfo.emptyTileCoords.forEach((coords: any) => {
+            this.matrix[coords[0]][coords[1]].possibleNumbers &= ~this.matrix[y][x].possibleNumbers;
+        });
+
+        let rowInfo = this._getRowInfo(y, x);
+        rowInfo.emptyTileCoords = rowInfo.emptyTileCoords.filter((coord: any) => {
+            return !(coord[0] === y && coord[1] === x);
+        });
+        rowInfo.emptyTileCoords.forEach((coords: any) => {
+            this.matrix[coords[0]][coords[1]].possibleNumbers &= ~this.matrix[y][x].possibleNumbers;
+        });
+        return;
     }
 }
 
