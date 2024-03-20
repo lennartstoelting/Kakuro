@@ -81,7 +81,7 @@ class View {
 
                 // the noted numbers in the tiles
                 for (let i = 0; i < 9; i++) {
-                    if (!(tile.possibleNumbers & (2 ** i))) continue;
+                    if (!(tile.num & (2 ** i))) continue;
 
                     this.ctx.font = this.tileSize / 3.5 + "px Arial";
                     this.ctx.fillStyle = "grey";

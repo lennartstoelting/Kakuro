@@ -109,9 +109,9 @@ class Model {
                 }
 
                 // console.log(this._permutationsFromSumTable(y, x));
-                this.matrix[y][x].possibleNumbers &= this._permutationsFromSumTable(y, x);
+                this.matrix[y][x].num &= this._permutationsFromSumTable(y, x);
                 this._sudokuRules(y, x);
-                // this.matrix[y][x].possibleNumbers &= this._sudokuRules(y, x);
+                // this.matrix[y][x].num &= this._sudokuRules(y, x);
                 /**
                  * next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
                  * this one already might need to be a recursive function to gain of of each won step
@@ -128,10 +128,19 @@ class Model {
         console.log(this.matrix);
     }
 
+    // this function can be improved by including what the current tile has already ruled out
+    // if the tile has already ruled out everything except for the number 8, we only need to consider the permutations of the sum table that include the number 8
+    // if the tile has already ruled out everything but the numbers 8 and 9, we only need to consider the permutations of the sum table that include the numbers 8 or 9
+    // in the example of the tile at y = 2 and x = 1, the only possible number is 8
+    // the sum of the row is 17 with 3 playble tiles in the row, so the only possible permutation is 100 000 011
+
     _permutationsFromSumTable(y: number, x: number): number {
         let colInfo = this._getColumnInfo(y, x);
         let rowInfo = this._getRowInfo(y, x);
 
+        let numbersFixed = this.matrix[y][x].num;
+
+        // this reduction needs to take into account the numbers that are already fixed in the other tiles
         let colCombinations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length].reduce((acc, cur) => {
             acc |= cur;
             return acc;
@@ -186,7 +195,7 @@ class Model {
             return !(coord[0] === y && coord[1] === x);
         });
         colInfo.emptyTileCoords.forEach((coords: any) => {
-            this.matrix[coords[0]][coords[1]].possibleNumbers &= ~this.matrix[y][x].possibleNumbers;
+            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
         });
 
         let rowInfo = this._getRowInfo(y, x);
@@ -194,7 +203,7 @@ class Model {
             return !(coord[0] === y && coord[1] === x);
         });
         rowInfo.emptyTileCoords.forEach((coords: any) => {
-            this.matrix[coords[0]][coords[1]].possibleNumbers &= ~this.matrix[y][x].possibleNumbers;
+            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
         });
         return;
     }

@@ -6,20 +6,20 @@ export class Tile {
 }
 
 export class PlayableTile extends Tile {
-    possibleNumbers: number;
+    num: number;
 
-    constructor(possibleNumbers: number) {
+    constructor(num: number) {
         super();
-        this.possibleNumbers = possibleNumbers;
+        this.num = num;
     }
 
     // 001000000 -> 7
     // 110110100 -> 0
     onlyPossibleNumber(): number {
-        if (this.possibleNumbers.toString(2).split("1").length > 2) {
+        if (this.num.toString(2).split("1").length > 2) {
             return 0;
         }
-        return this.possibleNumbers.toString(2).split("1")[1].length + 1;
+        return this.num.toString(2).split("1")[1].length + 1;
     }
 }
 
