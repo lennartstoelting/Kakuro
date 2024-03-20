@@ -5,7 +5,7 @@ class Model {
     sumTable: number[][][];
 
     constructor() {
-        this.matrix = this.initBinaryMatrix(easy1);
+        this.matrix = this.initBinaryMatrix(medium2);
         this.sumTable = this.initSumTable();
     }
 
@@ -98,61 +98,111 @@ class Model {
     }
 
     solve(): void {
-        let yTest = 3;
-        let xTest = 8;
-
         this.matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
-                // only solve the empty tiles
-                if (this.matrix[y][x] instanceof UnplayableTile) {
+                if (tile instanceof UnplayableTile) {
                     return;
                 }
 
-                // console.log(this._permutationsFromSumTable(y, x));
-                this.matrix[y][x].num &= this._permutationsFromSumTable(y, x);
+                let colInfo = this._getColumnInfo(y, x);
+                let rowInfo = this._getRowInfo(y, x);
+
+                // all permutations for amount of tiles in row that sum to the sum of the row (and column vice versa)
+                let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length];
+                let colPermutations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length];
+
+                // filter the permutations by the numbers that are already fixed in the tile, therefor having to be included in the final permutation
+                rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
+                colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
+
+                let combinedRowPermutations = this._reducePermutations(rowPermutations);
+                let combinedColPermutations = this._reducePermutations(colPermutations);
+
+                tile.num &= combinedRowPermutations & combinedColPermutations;
+
+                // wenn ich jetzt bspw. in y : 1 x: 3 bin sollte ich ja einsehen, das nur noch die Zahlen 1 oder 2 möglich sind
+                // also schaue ich, welche Permutationen aus der Liste noch übrig bleiben
+                // in der rowPermutations Liste sind Kombinationen für die Zahl 8 auf zwei Feldern enthalten
+                // 10100,100010,1000001 (5+3, 6+2, 7+1)
+                // a nur noch die Zahlen 1 und 2 möglich sind, bleiben nur noch 1000001 (6+2) und 100010 (7+1) übrig
+                // jetzt will ich nicht nur die dritte, überflüssige Permutation streichen, sondern auch in dem benachbarten Feld das einzige übrig lassen, was noch möglich ist
+                // in diesem Falle sollte also auf y: 1 x: 2 nur noch die 7 und die 7 übrig bleiben
+
+                rowInfo.emptyTileCoords.forEach((coords: any) => {
+                    this.matrix[coords[0]][coords[1]].num &= combinedRowPermutations;
+                    // console.log(coords);
+                });
+
                 this._sudokuRules(y, x);
-                // this.matrix[y][x].num &= this._sudokuRules(y, x);
-                /**
-                 * next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
-                 * this one already might need to be a recursive function to gain of of each won step
-                 *
-                 * then functions could be the ones in cases where two tiles only each have two numbers left or three tiles each have three numbers left.
-                 * those can also be eliminated from the others, similar to sudoku rules
-                 * e.g. if two tiles only have 2 and 3 left, the other tiles can't have 2 and 3 in them
-                 *
-                 * also more functions with the sumtable, e.g. if for example in a row with three numbers, there is already a safe 7 in there, the only combinations left have to include a 7
-                 * this might get rid of some combinations in the sumtable
-                 */
+                /*
+                if (y == 1 && x <= 3) {
+                    rowInfo.emptyTileCoords.forEach((coords: any) => {
+                        if (coords[0] == y && coords[1] == x) {
+                            return;
+                        }
+                        console.log(coords);
+                    });
+
+                    console.log(
+                        "y: " +
+                            y +
+                            " x: " +
+                            x +
+                            "\n" +
+                            "current State of tile: " +
+                            tile.num.toString(2) +
+                            "\n" +
+                            rowInfo.emptyTileCoords.length +
+                            " tiles in this row sum to " +
+                            rowInfo.sum +
+                            "\npossible rowPermutations " +
+                            rowPermutations.map((el) => el.toString(2)) +
+                            "\ncombinedRowPermutations " +
+                            combinedRowPermutations.toString(2) +
+                            "\n" +
+                            colInfo.emptyTileCoords.length +
+                            " tiles in this column sum to " +
+                            colInfo.sum +
+                            "\npossible colPermutations " +
+                            colPermutations.map((el) => el.toString(2)) +
+                            "\ncombinedColPermutations " +
+                            combinedColPermutations.toString(2)
+                    );
+                }
+                */
             });
         });
-        console.log(this.matrix);
     }
 
-    // this function can be improved by including what the current tile has already ruled out
-    // if the tile has already ruled out everything except for the number 8, we only need to consider the permutations of the sum table that include the number 8
-    // if the tile has already ruled out everything but the numbers 8 and 9, we only need to consider the permutations of the sum table that include the numbers 8 or 9
-    // in the example of the tile at y = 2 and x = 1, the only possible number is 8
-    // the sum of the row is 17 with 3 playble tiles in the row, so the only possible permutation is 100 000 011
+    _reducePermutations(permutations: number[]): number {
+        return permutations.reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
+    }
 
-    _permutationsFromSumTable(y: number, x: number): number {
+    _sudokuRules(y: number, x: number): void {
+        let onlyPossibleNumber = this.matrix[y][x].onlyPossibleNumber();
+        if (!onlyPossibleNumber) {
+            return;
+        }
+
         let colInfo = this._getColumnInfo(y, x);
+        colInfo.emptyTileCoords = colInfo.emptyTileCoords.filter((coord: any) => {
+            return !(coord[0] === y && coord[1] === x);
+        });
+        colInfo.emptyTileCoords.forEach((coords: any) => {
+            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+        });
+
         let rowInfo = this._getRowInfo(y, x);
-
-        let numbersFixed = this.matrix[y][x].num;
-
-        // this reduction needs to take into account the numbers that are already fixed in the other tiles
-        let colCombinations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length].reduce((acc, cur) => {
-            acc |= cur;
-            return acc;
-        }, 0);
-
-        let rowCombinations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length].reduce((acc, cur) => {
-            acc |= cur;
-            return acc;
-        }, 0);
-
-        let possibleCombinations = rowCombinations & colCombinations;
-        return possibleCombinations;
+        rowInfo.emptyTileCoords = rowInfo.emptyTileCoords.filter((coord: any) => {
+            return !(coord[0] === y && coord[1] === x);
+        });
+        rowInfo.emptyTileCoords.forEach((coords: any) => {
+            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+        });
+        return;
     }
 
     /**
@@ -182,30 +232,6 @@ class Model {
         }
 
         return { sum: this.matrix[y][x].rowSum, emptyTileCoords: emptyTilesInfo };
-    }
-
-    _sudokuRules(y: number, x: number): void {
-        let onlyPossibleNumber = this.matrix[y][x].onlyPossibleNumber();
-        if (!onlyPossibleNumber) {
-            return;
-        }
-
-        let colInfo = this._getColumnInfo(y, x);
-        colInfo.emptyTileCoords = colInfo.emptyTileCoords.filter((coord: any) => {
-            return !(coord[0] === y && coord[1] === x);
-        });
-        colInfo.emptyTileCoords.forEach((coords: any) => {
-            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
-        });
-
-        let rowInfo = this._getRowInfo(y, x);
-        rowInfo.emptyTileCoords = rowInfo.emptyTileCoords.filter((coord: any) => {
-            return !(coord[0] === y && coord[1] === x);
-        });
-        rowInfo.emptyTileCoords.forEach((coords: any) => {
-            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
-        });
-        return;
     }
 }
 
