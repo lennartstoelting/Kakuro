@@ -37,10 +37,10 @@ export class Model {
                     throw new Error("invalid input matrix at x: " + x + " and y: " + y);
                 }
                 if (colAndRow[0] > 45 || colAndRow[0] == 2 || colAndRow[0] == 1) {
-                    throw new Error("invalid input matrix: sum of col at x: " + x + " and y: " + y + " is given as " + colAndRow[0]);
+                    throw new Error("invalid input matrix: sum of col at y: " + y + " and x: " + x + " is given as " + colAndRow[0]);
                 }
                 if (colAndRow[1] > 45 || colAndRow[1] == 2 || colAndRow[1] == 1) {
-                    throw new Error("invalid input matrix: sum of row at x: " + x + " and y: " + y + " is given as " + colAndRow[1]);
+                    throw new Error("invalid input matrix: sum of row at y: " + y + " and x: " + x + " is given as " + colAndRow[1]);
                 }
 
                 rowArray.push(new UnplayableTile(colAndRow[0], colAndRow[1]));
@@ -107,34 +107,33 @@ export class Model {
                 let colInfo = this._getColumnInfo(y, x);
                 let rowInfo = this._getRowInfo(y, x);
 
-                // all permutations for amount of tiles in row that sum to the sum of the row (and column vice versa)
+                // all permutations with given tile amount to sum
                 let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length];
                 let colPermutations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length];
 
-                // filter the permutations by the numbers that are already fixed in the tile, therefor having to be included in the final permutation
+                // filter the permutations by the numbers that are already fixed in the tile, therefore having to be included in the final permutation
                 rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
                 colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
 
-                let combinedRowPermutations = this._reducePermutations(rowPermutations);
-                let combinedColPermutations = this._reducePermutations(colPermutations);
+                // for this current tile, the permutations are combined to a superposition
+                let combinedRowPermutations = this._reduceToSuperposition(rowPermutations);
+                let combinedColPermutations = this._reduceToSuperposition(colPermutations);
 
+                // both superpositions are being combined and then applied to the tile
                 tile.num &= combinedRowPermutations & combinedColPermutations;
 
-                // wenn ich jetzt bspw. in y : 1 x: 3 bin sollte ich ja einsehen, das nur noch die Zahlen 1 oder 2 möglich sind
-                // also schaue ich, welche Permutationen aus der Liste noch übrig bleiben
-                // in der rowPermutations Liste sind Kombinationen für die Zahl 8 auf zwei Feldern enthalten
-                // 10100,100010,1000001 (5+3, 6+2, 7+1)
-                // a nur noch die Zahlen 1 und 2 möglich sind, bleiben nur noch 1000001 (6+2) und 100010 (7+1) übrig
-                // jetzt will ich nicht nur die dritte, überflüssige Permutation streichen, sondern auch in dem benachbarten Feld das einzige übrig lassen, was noch möglich ist
-                // in diesem Falle sollte also auf y: 1 x: 2 nur noch die 7 und die 7 übrig bleiben
-
+                // the superposition includes the all leftover permutations after filtering, so the permutations in the other tiles in the row and column can be reduced
                 rowInfo.emptyTileCoords.forEach((coords: any) => {
                     this.matrix[coords[0]][coords[1]].num &= combinedRowPermutations;
-                    // console.log(coords);
+                });
+
+                colInfo.emptyTileCoords.forEach((coords: any) => {
+                    this.matrix[coords[0]][coords[1]].num &= combinedColPermutations;
                 });
 
                 this._sudokuRules(y, x);
                 /*
+                // debugging console logs
                 if (y == 1 && x <= 3) {
                     rowInfo.emptyTileCoords.forEach((coords: any) => {
                         if (coords[0] == y && coords[1] == x) {
@@ -174,7 +173,7 @@ export class Model {
         });
     }
 
-    _reducePermutations(permutations: number[]): number {
+    _reduceToSuperposition(permutations: number[]): number {
         return permutations.reduce((acc, cur) => {
             acc |= cur;
             return acc;
@@ -234,3 +233,12 @@ export class Model {
         return { sum: this.matrix[y][x].rowSum, emptyTileCoords: emptyTilesInfo };
     }
 }
+
+/**
+ * TODO:
+ * - aesthetics:                make the colors prettier to look at in view
+ * - aesthetics + mechanics:    after each click of the solve button, color the tiles that have been affected by the solve change function (this requires to save a copy of the previous state of the matrix)
+ * - mechanics:                 make a solveAll button that repeatedly/recursively calls the solve function until no more changes can be made
+ * - rules:                     for easy[1], specify a rule that, in case some numbers are already fixed as the final numbers, reapplies the sumTable (if you have three tiles in a row and one is already safe, the sum of the other two tiles can be recalculated and tested against the sumTable)
+ * - rules:                     for easy[1], specify a rule that solves row 2 by realizing that only 8 and 9 are already fixed for the final permutation and adjust the other tiles accordingly
+ */
