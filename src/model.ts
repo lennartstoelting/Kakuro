@@ -5,13 +5,10 @@ class Model {
     sumTable: number[][][];
 
     constructor() {
-        // grundsätzlich: unspielbar, Summenfeld, spielbar
-        // Idee: 13 bit Zahl (bit 0: spielbar ja oder nein? bit 1-12: Summenfeld)
         this.matrix = this.initBinaryMatrix(easy1);
         this.sumTable = this.initSumTable();
 
-        // console.log(this.matrix);
-        // console.log(this.sumTable);
+        console.log(this._getRowInfo(4, 3));
     }
 
     initBinaryMatrix(matrix: number[][]): Tile[][] {
@@ -75,6 +72,7 @@ class Model {
      * each of the numbers from that point are meant to be read in binary, having a 1 everywhere the number is in the combination
      */
     initSumTable(): number[][][] {
+        // create a 45x9x? empty array
         let table: number[][][] = Array(46)
             .fill(0)
             .map(() =>
@@ -112,34 +110,35 @@ class Model {
                     return;
                 }
 
-                // console.log(this._crossReferenceSumTableEntries(y, x));
-                this.matrix[y][x].possibleNumbers &= this._crossReferenceSumTableEntries(y, x);
+                // console.log(this._permutationsFromSumTable(y, x));
+                this.matrix[y][x].possibleNumbers &= this._permutationsFromSumTable(y, x);
                 this.matrix[y][x].possibleNumbers &= this._sudokuRules(y, x);
-                // next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
-                // this one already might need to be a recursive function to gain of of each won step
-                //
-                // then functions could be the ones in cases where two tiles only each have two numbers left or three tiles each have three numbers left.
-                // those can also be eliminated from the others, similar to sudoku rules
-                // e.g. if two tiles only have 2 and 3 left, the other tiles can't have 2 and 3 in them
-                //
-                // also more functions with the sumtable, e.g. if for example in a row with three numbers, there is already a safe 7 in there, the only combinations left have to include a 7
-                // this might get rid of some combinations in the sumtable
+                /**
+                 * next function: sudoku rules, checks in row and colum if there are already fixed numbers and removes them from the possible combinations
+                 * this one already might need to be a recursive function to gain of of each won step
+                 *
+                 * then functions could be the ones in cases where two tiles only each have two numbers left or three tiles each have three numbers left.
+                 * those can also be eliminated from the others, similar to sudoku rules
+                 * e.g. if two tiles only have 2 and 3 left, the other tiles can't have 2 and 3 in them
+                 *
+                 * also more functions with the sumtable, e.g. if for example in a row with three numbers, there is already a safe 7 in there, the only combinations left have to include a 7
+                 * this might get rid of some combinations in the sumtable
+                 */
             });
         });
-
-        // this.matrix[yTest][xTest] = parseInt("1101111111", 2);
+        console.log(this.matrix);
     }
 
-    _crossReferenceSumTableEntries(y: number, x: number): number {
+    _permutationsFromSumTable(y: number, x: number): number {
         let colInfo = this._getColumnInfo(y, x);
         let rowInfo = this._getRowInfo(y, x);
 
-        let colCombinations = this.sumTable[colInfo.sum][colInfo.tileAmount].reduce((acc, cur) => {
+        let colCombinations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length].reduce((acc, cur) => {
             acc |= cur;
             return acc;
         }, 0);
 
-        let rowCombinations = this.sumTable[rowInfo.sum][rowInfo.tileAmount].reduce((acc, cur) => {
+        let rowCombinations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length].reduce((acc, cur) => {
             acc |= cur;
             return acc;
         }, 0);
@@ -147,6 +146,7 @@ class Model {
         let possibleCombinations = rowCombinations & colCombinations;
         return possibleCombinations;
     }
+
     /**
      * loops up to find the sum of the column
      * loops down from there to find the empty tiles below that sum
@@ -156,23 +156,31 @@ class Model {
         while (y >= 0 && this.matrix[y][x] instanceof PlayableTile) {
             y--;
         }
-        let emptyTilesInColumn = 1;
-        while (y + emptyTilesInColumn < 9 && this.matrix[y + emptyTilesInColumn + 1][x] instanceof PlayableTile) {
-            emptyTilesInColumn++;
+        let emptyTilesInfo = [];
+        while (y + emptyTilesInfo.length < 9 && this.matrix[y + emptyTilesInfo.length + 1][x] instanceof PlayableTile) {
+            emptyTilesInfo.push([y + emptyTilesInfo.length + 1, x]);
         }
-        return { sum: this.matrix[y][x].colSum, tileAmount: emptyTilesInColumn };
+
+        return { sum: this.matrix[y][x].colSum, emptyTileCoords: emptyTilesInfo };
     }
 
     _getRowInfo(y: number, x: number): any {
         while (x >= 0 && this.matrix[y][x] instanceof PlayableTile) {
             x--;
         }
-        let emptyTilesInRow = 1;
-        while (x + emptyTilesInRow < 9 && this.matrix[y][x + emptyTilesInRow + 1] instanceof PlayableTile) {
-            emptyTilesInRow++;
+        let emptyTilesInfo = [];
+        while (x + emptyTilesInfo.length < 9 && this.matrix[y][x + emptyTilesInfo.length + 1] instanceof PlayableTile) {
+            emptyTilesInfo.push([y, x + emptyTilesInfo.length + 1]);
         }
-        return { sum: this.matrix[y][x].rowSum, tileAmount: emptyTilesInRow };
+
+        return { sum: this.matrix[y][x].rowSum, emptyTileCoords: emptyTilesInfo };
     }
+
+    /**
+     * loops up to find the sum of the column
+     * loops down from there to find the empty tiles below that sum
+     * @returns array with the sum to the right and the amount of empty tiles in the column
+     */
 
     _sudokuRules(y: number, x: number): number {
         return 511;
