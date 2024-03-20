@@ -111,8 +111,6 @@ export class Model {
                 rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
                 colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
 
-                // dieser ganze Teil sowie die sudoku rules ließen sich ersetzen durch eine Restsummenberechnung
-
                 // if the row (or column) is already has fixed tiles, the permutations have to include these fixed numbers
                 let fixedInRow = 0;
                 rowInfo.emptyTileCoords.forEach((coords: any) => {
@@ -154,6 +152,8 @@ export class Model {
                 this._sudokuRules(y, x);
 
                 // debugging console logs
+
+                /*
                 if (y == 3 && x > 4) {
                     console.log(
                         "y: " +
@@ -185,8 +185,10 @@ export class Model {
                             combinedColPermutations.toString(2)
                     );
                 }
+                */
             });
         });
+        console.log("this.matrix: ", this.matrix);
     }
 
     _reduceToSuperposition(permutations: number[]): number {
@@ -197,26 +199,59 @@ export class Model {
     }
 
     _sudokuRules(y: number, x: number): void {
-        let onlyPossibleNumber = this.matrix[y][x].onlyPossibleNumber();
-        if (!onlyPossibleNumber) {
-            return;
-        }
+        // all of this needs to be rewritten
+        // we check, how many possible numbers the current tile has
+        // if the tile is already fixed, it should return 1 number
+        let possibleNumbers = this.matrix[y][x].num.toString(2).split("1").length - 1;
 
         let colInfo = this._getColumnInfo(y, x);
-        colInfo.emptyTileCoords = colInfo.emptyTileCoords.filter((coord: any) => {
-            return !(coord[0] === y && coord[1] === x);
-        });
         colInfo.emptyTileCoords.forEach((coords: any) => {
-            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+            if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
+                possibleNumbers -= 1;
+            }
         });
+        if (possibleNumbers === 0) {
+            colInfo.emptyTileCoords.forEach((coords: any) => {
+                if (this.matrix[y][x].num == this.matrix[coords[0]][coords[1]].num) return;
+                this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+            });
+        }
 
+        possibleNumbers = this.matrix[y][x].num.toString(2).split("1").length - 1;
         let rowInfo = this._getRowInfo(y, x);
-        rowInfo.emptyTileCoords = rowInfo.emptyTileCoords.filter((coord: any) => {
-            return !(coord[0] === y && coord[1] === x);
-        });
         rowInfo.emptyTileCoords.forEach((coords: any) => {
-            this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+            if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
+                possibleNumbers -= 1;
+            }
         });
+        if (possibleNumbers === 0) {
+            rowInfo.emptyTileCoords.forEach((coords: any) => {
+                if (this.matrix[y][x].num == this.matrix[coords[0]][coords[1]].num) return;
+                this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+            });
+        }
+
+        // if the tile still has the numbers e.g. 1 and 2, we look out for another tile that has only 1 or 2 as possible number
+        // if that is the case, then all the other tiles in the row or column should have the number 1 and 2 removed from their possible numbers
+
+        // //currently only deletes numbers in other tiles, when current tile is fixed
+        // let onlyPossibleNumber = this.matrix[y][x].onlyPossibleNumber();
+        // if (!onlyPossibleNumber) {
+        //     return;
+        // }
+
+        // // get all other tiles, ignore the one that is currently being checked and delete the number from the other tiles that is fixed in the current tile
+        // let colInfo = this._getColumnInfo(y, x);
+        // colInfo.emptyTileCoords.forEach((coords: any) => {
+        //     if (coords[0] === y && coords[1] === x) return;
+        //     this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+        // });
+
+        // let rowInfo = this._getRowInfo(y, x);
+        // rowInfo.emptyTileCoords.forEach((coords: any) => {
+        //     if (coords[0] === y && coords[1] === x) return;
+        //     this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+        // });
         return;
     }
 
