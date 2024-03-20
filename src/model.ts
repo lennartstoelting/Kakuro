@@ -239,6 +239,10 @@ export class Model {
  * - aesthetics:                make the colors prettier to look at in view
  * - aesthetics + mechanics:    after each click of the solve button, color the tiles that have been affected by the solve change function (this requires to save a copy of the previous state of the matrix)
  * - mechanics:                 make a solveAll button that repeatedly/recursively calls the solve function until no more changes can be made
+ * - readability:               make the code more readable by splitting the solve function into smaller functions if possible
+ * - readability:               make the code more readable by adding comments to the code
+ * - error handling:            add error handling for the case that the input matrix is not valid
+ * - error handling:            add error handling for the case that the sum of the row or the column isn't valid
  * - rules:                     for easy[1], specify a rule that, in case some numbers are already fixed as the final numbers, reapplies the sumTable (if you have three tiles in a row and one is already safe, the sum of the other two tiles can be recalculated and tested against the sumTable)
  * - rules:                     for easy[1], specify a rule that solves row 2 by realizing that only 8 and 9 are already fixed for the final permutation and adjust the other tiles accordingly
  */
