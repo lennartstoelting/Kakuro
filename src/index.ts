@@ -15,33 +15,33 @@ class Controller {
         this.model = new Model(levels.medium[0]);
         this.view = new View();
 
-        this._getDomElements();
-        this._initEventListeners();
+        this.getDomElements();
+        this.initEventListeners();
 
-        this._updateView();
+        this.updateView();
     }
 
-    private _getDomElements(): void {
+    private getDomElements(): void {
         this.solveButton = document.getElementById("solve") as HTMLButtonElement;
     }
 
-    private _initEventListeners(): void {
+    private initEventListeners(): void {
         window.addEventListener("resize", () => {
-            this._updateView();
+            this.updateView();
         });
 
         this.solveButton.addEventListener("click", () => {
             this.model.solve();
-            this._updateView();
+            this.updateView();
         });
     }
 
-    private _updateView(): void {
+    private updateView(): void {
         this.view.drawBoard(this.model.matrix);
-        this.view.board.addEventListener("click", (event: MouseEvent) => this._boardClicked(event));
+        this.view.board.addEventListener("click", (event: MouseEvent) => this.boardClicked(event));
     }
 
-    private _boardClicked(event: MouseEvent): void {
+    private boardClicked(event: MouseEvent): void {
         console.log("board clicked");
     }
 }

@@ -69,7 +69,7 @@ export class Model {
      * the first index is the sum (#45), the second index is the amount of numbers that make up the sum(#9),
      * each of the numbers from that point are meant to be read in binary, having a 1 everywhere the number is in the combination
      */
-    initSumTable(): number[][][] {
+    private initSumTable(): number[][][] {
         // create a 45x9x? empty array
         let table: number[][][] = Array(46)
             .fill(0)
@@ -94,32 +94,34 @@ export class Model {
         return table;
     }
 
-    solve(): void {
+    public solve(): void {
         this.matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
                 if (tile instanceof UnplayableTile) {
                     return;
                 }
 
-                let rowInfo = this._getRowInfo(y, x);
-                let colInfo = this._getColumnInfo(y, x);
+                let rowInfo = this.getRowInfo(y, x);
+                let colInfo = this.getColumnInfo(y, x);
+
+                // putting some of that info into specific variables for better readability might be helpful
 
                 // all permutations with given tile amount to sum
-                let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.emptyTileCoords.length];
-                let colPermutations = this.sumTable[colInfo.sum][colInfo.emptyTileCoords.length];
+                let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.tileCoords.length];
+                let colPermutations = this.sumTable[colInfo.sum][colInfo.tileCoords.length];
 
                 rowPermutations = rowPermutations.filter((permutation) => permutation & tile.num);
                 colPermutations = colPermutations.filter((permutation) => permutation & tile.num);
 
                 // if the row (or column) is already has fixed tiles, the permutations have to include these fixed numbers
                 let fixedInRow = 0;
-                rowInfo.emptyTileCoords.forEach((coords: any) => {
+                rowInfo.tileCoords.forEach((coords: any) => {
                     if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
                         fixedInRow |= this.matrix[coords[0]][coords[1]].num;
                     }
                 });
                 let fixedInCol = 0;
-                colInfo.emptyTileCoords.forEach((coords: any) => {
+                colInfo.tileCoords.forEach((coords: any) => {
                     if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
                         fixedInCol |= this.matrix[coords[0]][coords[1]].num;
                     }
@@ -134,22 +136,22 @@ export class Model {
                 }
 
                 // for this current tile, the permutations are combined to a superposition
-                let combinedRowPermutations = this._reduceToSuperposition(rowPermutations);
-                let combinedColPermutations = this._reduceToSuperposition(colPermutations);
+                let combinedRowPermutations = this.reduceToSuperposition(rowPermutations);
+                let combinedColPermutations = this.reduceToSuperposition(colPermutations);
 
                 // the superposition includes the all leftover permutations after filtering, so the permutations in the other tiles in the row and column can be reduced
-                rowInfo.emptyTileCoords.forEach((coords: any) => {
+                rowInfo.tileCoords.forEach((coords: any) => {
                     this.matrix[coords[0]][coords[1]].num &= combinedRowPermutations;
                 });
 
-                colInfo.emptyTileCoords.forEach((coords: any) => {
+                colInfo.tileCoords.forEach((coords: any) => {
                     this.matrix[coords[0]][coords[1]].num &= combinedColPermutations;
                 });
 
                 // both superpositions are being combined and then applied to the tile
                 tile.num &= combinedRowPermutations & combinedColPermutations;
 
-                this._sudokuRules(y, x);
+                this.sudokuRules(y, x);
 
                 // debugging console logs
 
@@ -163,7 +165,7 @@ export class Model {
                 //             "current State of tile: " +
                 //             tile.num.toString(2) +
                 //             "\n" +
-                //             rowInfo.emptyTileCoords.length +
+                //             rowInfo.tileCoords.length +
                 //             " tiles in this row sum to " +
                 //             rowInfo.sum +
                 //             "\npossible rowPermutations " +
@@ -171,7 +173,7 @@ export class Model {
                 //             "\ncombinedRowPermutations " +
                 //             combinedRowPermutations.toString(2) +
                 //             "\n" +
-                //             colInfo.emptyTileCoords.length +
+                //             colInfo.tileCoords.length +
                 //             " tiles in this column sum to " +
                 //             colInfo.sum +
                 //             "\npossible colPermutations " +
@@ -184,41 +186,41 @@ export class Model {
         });
     }
 
-    _reduceToSuperposition(permutations: number[]): number {
+    private reduceToSuperposition(permutations: number[]): number {
         return permutations.reduce((acc, cur) => {
             acc |= cur;
             return acc;
         }, 0);
     }
 
-    _sudokuRules(y: number, x: number): void {
+    private sudokuRules(y: number, x: number): void {
         // we check, how many possible numbers the current tile has
         // if the tile is already fixed, it should return 1 number
         let possibleNumbers = this.matrix[y][x].num.toString(2).split("1").length - 1;
 
-        let colInfo = this._getColumnInfo(y, x);
-        colInfo.emptyTileCoords.forEach((coords: any) => {
+        let colInfo = this.getColumnInfo(y, x);
+        colInfo.tileCoords.forEach((coords: any) => {
             // within this if, there might be a way to fix/include the solution 8 for the tile at y: 1 and x: 6 on medium[0]
             if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
                 possibleNumbers -= 1;
             }
         });
         if (possibleNumbers === 0) {
-            colInfo.emptyTileCoords.forEach((coords: any) => {
+            colInfo.tileCoords.forEach((coords: any) => {
                 if (this.matrix[y][x].num == this.matrix[coords[0]][coords[1]].num) return;
                 this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
             });
         }
 
         possibleNumbers = this.matrix[y][x].num.toString(2).split("1").length - 1;
-        let rowInfo = this._getRowInfo(y, x);
-        rowInfo.emptyTileCoords.forEach((coords: any) => {
+        let rowInfo = this.getRowInfo(y, x);
+        rowInfo.tileCoords.forEach((coords: any) => {
             if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
                 possibleNumbers -= 1;
             }
         });
         if (possibleNumbers === 0) {
-            rowInfo.emptyTileCoords.forEach((coords: any) => {
+            rowInfo.tileCoords.forEach((coords: any) => {
                 if (this.matrix[y][x].num == this.matrix[coords[0]][coords[1]].num) return;
                 this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
             });
@@ -231,28 +233,28 @@ export class Model {
      * loops down from there to find the empty tiles below that sum
      * @returns array with the sum to the right and the amount of empty tiles in the column
      */
-    _getColumnInfo(y: number, x: number): any {
+    private getColumnInfo(y: number, x: number): any {
         while (y >= 0 && this.matrix[y][x] instanceof PlayableTile) {
             y--;
         }
-        let emptyTilesInfo = [];
-        while (y + emptyTilesInfo.length < 9 && this.matrix[y + emptyTilesInfo.length + 1][x] instanceof PlayableTile) {
-            emptyTilesInfo.push([y + emptyTilesInfo.length + 1, x]);
+        let tilesInfo = [];
+        while (y + tilesInfo.length < 9 && this.matrix[y + tilesInfo.length + 1][x] instanceof PlayableTile) {
+            tilesInfo.push([y + tilesInfo.length + 1, x]);
         }
 
-        return { sum: this.matrix[y][x].colSum, emptyTileCoords: emptyTilesInfo };
+        return { sum: this.matrix[y][x].colSum, tileCoords: tilesInfo };
     }
 
-    _getRowInfo(y: number, x: number): any {
+    private getRowInfo(y: number, x: number): any {
         while (x >= 0 && this.matrix[y][x] instanceof PlayableTile) {
             x--;
         }
-        let emptyTilesInfo = [];
-        while (x + emptyTilesInfo.length < 9 && this.matrix[y][x + emptyTilesInfo.length + 1] instanceof PlayableTile) {
-            emptyTilesInfo.push([y, x + emptyTilesInfo.length + 1]);
+        let tilesInfo = [];
+        while (x + tilesInfo.length < 9 && this.matrix[y][x + tilesInfo.length + 1] instanceof PlayableTile) {
+            tilesInfo.push([y, x + tilesInfo.length + 1]);
         }
 
-        return { sum: this.matrix[y][x].rowSum, emptyTileCoords: emptyTilesInfo };
+        return { sum: this.matrix[y][x].rowSum, tileCoords: tilesInfo };
     }
 }
 

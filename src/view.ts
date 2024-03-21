@@ -16,8 +16,8 @@ export class View {
     }
 
     public drawBoard(matrix: any[][]): void {
-        this._createCanvas(matrix);
-        this._drawBackground();
+        this.createCanvas(matrix);
+        this.drawBackground();
 
         matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
@@ -26,18 +26,18 @@ export class View {
 
                 // the unplayable tiles with sums
                 if (tile instanceof UnplayableTile) {
-                    this._drawUnplayableTile(tile, nodeCornerX, nodeCornerY);
+                    this.drawUnplayableTile(tile, nodeCornerX, nodeCornerY);
                     return;
                 } else {
-                    this._drawPlayableTile(tile, nodeCornerX, nodeCornerY);
+                    this.drawPlayableTile(tile, nodeCornerX, nodeCornerY);
                 }
             });
         });
 
-        this._drawGridlines();
+        this.drawGridlines();
     }
 
-    private _drawUnplayableTile(tile: UnplayableTile, nodeCornerX: number, nodeCornerY: number): void {
+    private drawUnplayableTile(tile: UnplayableTile, nodeCornerX: number, nodeCornerY: number): void {
         let sumRight = tile.rowSum;
         if (sumRight) {
             this.ctx.font = this.tileSize / 3.5 + "px Arial";
@@ -66,7 +66,7 @@ export class View {
         }
     }
 
-    private _drawPlayableTile(tile: PlayableTile, nodeCornerX: number, nodeCornerY: number): void {
+    private drawPlayableTile(tile: PlayableTile, nodeCornerX: number, nodeCornerY: number): void {
         // background for playable tile
         this.ctx.beginPath();
         this.ctx.fillStyle = "lightgray";
@@ -101,7 +101,7 @@ export class View {
         }
     }
 
-    private _createCanvas(matrix: number[][]): void {
+    private createCanvas(matrix: number[][]): void {
         this.board = document.createElement("canvas");
         this.board.id = "board";
         this.board.style.boxShadow = "5px 5px 20px gray";
@@ -118,7 +118,7 @@ export class View {
         this.tilePadding = this.tileSize / 15;
     }
 
-    private _drawBackground(): void {
+    private drawBackground(): void {
         this.ctx.beginPath();
         this.ctx.fillStyle = "black";
         this.ctx.roundRect(0, 0, this.board.clientWidth, this.board.clientWidth, this.board.clientWidth * (this.borderRadius / 100));
@@ -126,7 +126,7 @@ export class View {
         this.ctx.fill();
     }
 
-    private _drawGridlines(): void {
+    private drawGridlines(): void {
         this.ctx.beginPath();
         for (let l = 0; l <= this.boardSideLength; l += this.tileSize) {
             this.ctx.moveTo(l, 0);
