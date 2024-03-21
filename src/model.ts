@@ -153,42 +153,35 @@ export class Model {
 
                 // debugging console logs
 
-                /*
-                if (y == 3 && x > 4) {
-                    console.log(
-                        "y: " +
-                            y +
-                            " x: " +
-                            x +
-                            "\n" +
-                            "current State of tile: " +
-                            tile.num.toString(2) +
-                            "\n" +
-                            rowInfo.emptyTileCoords.length +
-                            " tiles in this row sum to " +
-                            rowInfo.sum +
-                            "\npossible rowPermutations " +
-                            rowPermutations.map((el) => el.toString(2)) +
-                            "\ncombinedRowPermutations " +
-                            combinedRowPermutations.toString(2) +
-                            "\nfixedInRow " +
-                            fixedInRow.toString(2) +
-                            "\nrowPermutations with only fixed numbers " +
-                            rowPermutations.filter((permutation) => (permutation & fixedInRow) === fixedInRow).map((el) => el.toString(2)) +
-                            "\n" +
-                            colInfo.emptyTileCoords.length +
-                            " tiles in this column sum to " +
-                            colInfo.sum +
-                            "\npossible colPermutations " +
-                            colPermutations.map((el) => el.toString(2)) +
-                            "\ncombinedColPermutations " +
-                            combinedColPermutations.toString(2)
-                    );
-                }
-                */
+                // if (y < 3 && x == 6) {
+                //     console.log(
+                //         "y: " +
+                //             y +
+                //             " x: " +
+                //             x +
+                //             "\n" +
+                //             "current State of tile: " +
+                //             tile.num.toString(2) +
+                //             "\n" +
+                //             rowInfo.emptyTileCoords.length +
+                //             " tiles in this row sum to " +
+                //             rowInfo.sum +
+                //             "\npossible rowPermutations " +
+                //             rowPermutations.map((el) => el.toString(2)) +
+                //             "\ncombinedRowPermutations " +
+                //             combinedRowPermutations.toString(2) +
+                //             "\n" +
+                //             colInfo.emptyTileCoords.length +
+                //             " tiles in this column sum to " +
+                //             colInfo.sum +
+                //             "\npossible colPermutations " +
+                //             colPermutations.map((el) => el.toString(2)) +
+                //             "\ncombinedColPermutations " +
+                //             combinedColPermutations.toString(2)
+                //     );
+                // }
             });
         });
-        console.log("this.matrix: ", this.matrix);
     }
 
     _reduceToSuperposition(permutations: number[]): number {
@@ -199,7 +192,6 @@ export class Model {
     }
 
     _sudokuRules(y: number, x: number): void {
-        // all of this needs to be rewritten
         // we check, how many possible numbers the current tile has
         // if the tile is already fixed, it should return 1 number
         let possibleNumbers = this.matrix[y][x].num.toString(2).split("1").length - 1;
@@ -230,28 +222,6 @@ export class Model {
                 this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
             });
         }
-
-        // if the tile still has the numbers e.g. 1 and 2, we look out for another tile that has only 1 or 2 as possible number
-        // if that is the case, then all the other tiles in the row or column should have the number 1 and 2 removed from their possible numbers
-
-        // //currently only deletes numbers in other tiles, when current tile is fixed
-        // let onlyPossibleNumber = this.matrix[y][x].onlyPossibleNumber();
-        // if (!onlyPossibleNumber) {
-        //     return;
-        // }
-
-        // // get all other tiles, ignore the one that is currently being checked and delete the number from the other tiles that is fixed in the current tile
-        // let colInfo = this._getColumnInfo(y, x);
-        // colInfo.emptyTileCoords.forEach((coords: any) => {
-        //     if (coords[0] === y && coords[1] === x) return;
-        //     this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
-        // });
-
-        // let rowInfo = this._getRowInfo(y, x);
-        // rowInfo.emptyTileCoords.forEach((coords: any) => {
-        //     if (coords[0] === y && coords[1] === x) return;
-        //     this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
-        // });
         return;
     }
 
