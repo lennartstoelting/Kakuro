@@ -105,6 +105,7 @@ export class Model {
                 let colInfo = this.getColumnInfo(y, x);
 
                 // putting some of that info into specific variables for better readability might be helpful
+                // also, maybe to get rid of the necesseity of the .num at the end of each matrix call, I could consider having the matrix in the form of matrix: (UnplayableTile | number)[][]
 
                 // all permutations with given tile amount to sum
                 let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.tileCoords.length];
@@ -116,14 +117,14 @@ export class Model {
                 // if the row (or column) is already has fixed tiles, the permutations have to include these fixed numbers
                 let fixedInRow = 0;
                 rowInfo.tileCoords.forEach((coords: any) => {
-                    if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
-                        fixedInRow |= this.matrix[coords[0]][coords[1]].num;
+                    if (this.matrix[coords.y][coords.x].onlyPossibleNumber() !== 0) {
+                        fixedInRow |= this.matrix[coords.y][coords.x].num;
                     }
                 });
                 let fixedInCol = 0;
                 colInfo.tileCoords.forEach((coords: any) => {
-                    if (this.matrix[coords[0]][coords[1]].onlyPossibleNumber() !== 0) {
-                        fixedInCol |= this.matrix[coords[0]][coords[1]].num;
+                    if (this.matrix[coords.y][coords.x].onlyPossibleNumber() !== 0) {
+                        fixedInCol |= this.matrix[coords.y][coords.x].num;
                     }
                 });
 
@@ -141,11 +142,11 @@ export class Model {
 
                 // the superposition includes the all leftover permutations after filtering, so the permutations in the other tiles in the row and column can be reduced
                 rowInfo.tileCoords.forEach((coords: any) => {
-                    this.matrix[coords[0]][coords[1]].num &= combinedRowPermutations;
+                    this.matrix[coords.y][coords.x].num &= combinedRowPermutations;
                 });
 
                 colInfo.tileCoords.forEach((coords: any) => {
-                    this.matrix[coords[0]][coords[1]].num &= combinedColPermutations;
+                    this.matrix[coords.y][coords.x].num &= combinedColPermutations;
                 });
 
                 // both superpositions are being combined and then applied to the tile
@@ -201,28 +202,28 @@ export class Model {
         let colInfo = this.getColumnInfo(y, x);
         colInfo.tileCoords.forEach((coords: any) => {
             // within this if, there might be a way to fix/include the solution 8 for the tile at y: 1 and x: 6 on medium[0]
-            if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
+            if (this.matrix[coords.y][coords.x].num === this.matrix[y][x].num) {
                 possibleNumbers -= 1;
             }
         });
         if (possibleNumbers === 0) {
             colInfo.tileCoords.forEach((coords: any) => {
-                if (this.matrix[y][x].num == this.matrix[coords[0]][coords[1]].num) return;
-                this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+                if (this.matrix[y][x].num == this.matrix[coords.y][coords.x].num) return;
+                this.matrix[coords.y][coords.x].num &= ~this.matrix[y][x].num;
             });
         }
 
         possibleNumbers = this.matrix[y][x].num.toString(2).split("1").length - 1;
         let rowInfo = this.getRowInfo(y, x);
         rowInfo.tileCoords.forEach((coords: any) => {
-            if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
+            if (this.matrix[coords.y][coords.x].num === this.matrix[y][x].num) {
                 possibleNumbers -= 1;
             }
         });
         if (possibleNumbers === 0) {
             rowInfo.tileCoords.forEach((coords: any) => {
-                if (this.matrix[y][x].num == this.matrix[coords[0]][coords[1]].num) return;
-                this.matrix[coords[0]][coords[1]].num &= ~this.matrix[y][x].num;
+                if (this.matrix[y][x].num == this.matrix[coords.y][coords.x].num) return;
+                this.matrix[coords.y][coords.x].num &= ~this.matrix[y][x].num;
             });
         }
         return;
@@ -239,7 +240,7 @@ export class Model {
         }
         let tilesInfo = [];
         while (y + tilesInfo.length < 9 && this.matrix[y + tilesInfo.length + 1][x] instanceof PlayableTile) {
-            tilesInfo.push([y + tilesInfo.length + 1, x]);
+            tilesInfo.push({ y: y + tilesInfo.length + 1, x: x });
         }
 
         return { sum: this.matrix[y][x].colSum, tileCoords: tilesInfo };
@@ -251,7 +252,7 @@ export class Model {
         }
         let tilesInfo = [];
         while (x + tilesInfo.length < 9 && this.matrix[y][x + tilesInfo.length + 1] instanceof PlayableTile) {
-            tilesInfo.push([y, x + tilesInfo.length + 1]);
+            tilesInfo.push({ y: y, x: x + tilesInfo.length + 1 });
         }
 
         return { sum: this.matrix[y][x].rowSum, tileCoords: tilesInfo };
