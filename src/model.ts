@@ -198,6 +198,7 @@ export class Model {
 
         let colInfo = this._getColumnInfo(y, x);
         colInfo.emptyTileCoords.forEach((coords: any) => {
+            // within this if, there might be a way to fix/include the solution 8 for the tile at y: 1 and x: 6 on medium[0]
             if (this.matrix[coords[0]][coords[1]].num === this.matrix[y][x].num) {
                 possibleNumbers -= 1;
             }
