@@ -125,8 +125,13 @@ export class Model {
         let colInfo = this.getColumnInfo(y, x);
         let rowInfo = this.getRowInfo(y, x);
 
+        // all permutations where the given jointTiles amount to sum
         let colPermutations = this.sumTable[colInfo.sum][colInfo.jointTiles.length];
         let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length];
+
+        // filtered permutations by removing rued out candidates
+        colPermutations = colPermutations.filter((permutation) => permutation & candidates);
+        rowPermutations = rowPermutations.filter((permutation) => permutation & candidates);
 
         this.matrix[y][x] = this.reduceToSuperposition(colPermutations) & this.reduceToSuperposition(rowPermutations);
 
@@ -162,6 +167,12 @@ export class Model {
             acc |= cur;
             return acc;
         }, 0);
+    }
+
+    // for pretty console output
+    private visualizeStateOfTile(x: number, y: number): void {
+        let candidateString = ("000000000" + this.matrix[y][x].toString(2)).slice(-9);
+        console.log("State of Tile at x: " + x + " and y: " + y + " is " + candidateString);
     }
 
     //     public solveStep(): void {
@@ -224,35 +235,6 @@ export class Model {
 
     //                 this.sudokuRules(y, x);
 
-    //                 // debugging console logs
-
-    //                 // if (y < 3 && x == 6) {
-    //                 //     console.log(
-    //                 //         "y: " +
-    //                 //             y +
-    //                 //             " x: " +
-    //                 //             x +
-    //                 //             "\n" +
-    //                 //             "current State of tile: " +
-    //                 //             tile.num.toString(2) +
-    //                 //             "\n" +
-    //                 //             rowInfo.tileCoords.length +
-    //                 //             " tiles in this row sum to " +
-    //                 //             rowInfo.sum +
-    //                 //             "\npossible rowPermutations " +
-    //                 //             rowPermutations.map((el) => el.toString(2)) +
-    //                 //             "\ncombinedRowPermutations " +
-    //                 //             combinedRowPermutations.toString(2) +
-    //                 //             "\n" +
-    //                 //             colInfo.tileCoords.length +
-    //                 //             " tiles in this column sum to " +
-    //                 //             colInfo.sum +
-    //                 //             "\npossible colPermutations " +
-    //                 //             colPermutations.map((el) => el.toString(2)) +
-    //                 //             "\ncombinedColPermutations " +
-    //                 //             combinedColPermutations.toString(2)
-    //                 //     );
-    //                 // }
     //             });
     //         });
     //     }
