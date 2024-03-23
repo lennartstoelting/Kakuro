@@ -9,7 +9,8 @@ class Controller {
     view: View;
 
     // buttons
-    solveButton: HTMLButtonElement;
+    solveOneStepButton: HTMLButtonElement;
+    solveAllButton: HTMLButtonElement;
 
     constructor() {
         this.model = new Model(levels.medium[0]);
@@ -22,7 +23,8 @@ class Controller {
     }
 
     private getDomElements(): void {
-        this.solveButton = document.getElementById("solve") as HTMLButtonElement;
+        this.solveOneStepButton = document.getElementById("solve-step") as HTMLButtonElement;
+        this.solveAllButton = document.getElementById("solve-all") as HTMLButtonElement;
     }
 
     private initEventListeners(): void {
@@ -30,8 +32,13 @@ class Controller {
             this.updateView();
         });
 
-        this.solveButton.addEventListener("click", () => {
-            this.model.solve();
+        this.solveOneStepButton.addEventListener("click", () => {
+            this.model.solveStep();
+            this.updateView();
+        });
+
+        this.solveAllButton.addEventListener("click", () => {
+            this.model.solveAll();
             this.updateView();
         });
     }

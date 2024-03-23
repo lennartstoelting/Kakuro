@@ -94,7 +94,16 @@ export class Model {
         return table;
     }
 
-    public solve(): void {
+    public solveAll(): void {
+        let changesMade = true;
+        while (changesMade) {
+            let oldMatrix = JSON.parse(JSON.stringify(this.matrix));
+            this.solveStep();
+            changesMade = JSON.stringify(oldMatrix) !== JSON.stringify(this.matrix);
+        }
+    }
+
+    public solveStep(): void {
         this.matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
                 if (tile instanceof UnplayableTile) {
@@ -262,9 +271,9 @@ export class Model {
 /**
  * TODO:
  * - aesthetics:                make the colors prettier to look at in view (maybe only show little numbers if any sort of solving has been started)
- * - aesthetics + mechanics:    after each click of the solve button, color the tiles that have been affected by the solve change function (this requires to save a copy of the previous state of the matrix)
+ * - aesthetics + mechanics:    after each click of the solveStep button, color the tiles that have been affected by the solve change function (this requires to save a copy of the previous state of the matrix)
  * - mechanics:                 make a solveAll button that repeatedly/recursively calls the solve function until no more changes can be made
- * - readability:               make the code more readable by splitting the solve function into smaller functions if possible
+ * - readability:               make the code more readable by splitting the solveStep function into smaller functions if possible
  * - readability:               make the code more readable by adding comments to the code
  * - error handling:            add error handling for the case that the input matrix is not valid
  * - error handling:            add error handling for the case that the sum of the row or the column isn't valid
