@@ -8,14 +8,9 @@ export class Model {
     }
 
     /**
-     * the board is a 10x10 matrix
-     * each tile is represented by a number (that should be thought of as binary)
      * 000000 000000 000000000
      * col    row    candidates
      * if the number is zero, the tile is unplayable
-     * if the number is betweeen 1 and 511, the tile is playable
-     * if the number the number is shifted to the right by 9, that's where the sum of the row is stored
-     * if the number the number is shifted to the right by 9+6, that's where the sum of the column is stored
      */
     private initBinaryMatrix(matrix: number[][]): number[][] {
         let newMatrix: any[][] = [];
@@ -111,7 +106,62 @@ export class Model {
     }
 
     public solveStep(): void {
+        this.matrix.forEach((row, y) => {
+            row.forEach((tile, x) => {
+                if (!(tile & 511)) {
+                    return;
+                }
+                this.solveTile(tile, y, x);
+            });
+        });
         return;
+    }
+
+    public solveTile(candidates: number, y: number, x: number): void {
+        // this way, I can wirte whatever I want into candidates without changing the matrix
+        // only when I'm done, I can write the candidates back into the matrix
+        // this.matrix[y][x] = candidates;
+
+        let colInfo = this.getColumnInfo(y, x);
+        let rowInfo = this.getRowInfo(y, x);
+
+        let colPermutations = this.sumTable[colInfo.sum][colInfo.jointTiles.length];
+        let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length];
+
+        this.matrix[y][x] = this.reduceToSuperposition(colPermutations) & this.reduceToSuperposition(rowPermutations);
+
+        return;
+    }
+
+    private getColumnInfo(y: number, x: number): any {
+        while (y >= 0 && this.matrix[y][x] & 511) {
+            y--;
+        }
+        let colCoordinates = [];
+        while (y + colCoordinates.length < 9 && this.matrix[y + colCoordinates.length + 1][x] & 511) {
+            colCoordinates.push({ y: y + colCoordinates.length + 1, x: x });
+        }
+
+        return { sum: this.matrix[y][x] >> 15, jointTiles: colCoordinates };
+    }
+
+    private getRowInfo(y: number, x: number): any {
+        while (x >= 0 && this.matrix[y][x] & 511) {
+            x--;
+        }
+        let rowCoordinates = [];
+        while (x + rowCoordinates.length < 9 && this.matrix[y][x + rowCoordinates.length + 1] & 511) {
+            rowCoordinates.push({ y: y, x: x + rowCoordinates.length + 1 });
+        }
+
+        return { sum: (this.matrix[y][x] >> 9) & 63, jointTiles: rowCoordinates };
+    }
+
+    private reduceToSuperposition(permutations: number[]): number {
+        return permutations.reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
     }
 
     //     public solveStep(): void {
@@ -207,13 +257,6 @@ export class Model {
     //         });
     //     }
 
-    //     private reduceToSuperposition(permutations: number[]): number {
-    //         return permutations.reduce((acc, cur) => {
-    //             acc |= cur;
-    //             return acc;
-    //         }, 0);
-    //     }
-
     //     private sudokuRules(y: number, x: number): void {
     //         // we check, how many possible numbers the current tile has
     //         // if the tile is already fixed, it should return 1 number
@@ -247,35 +290,6 @@ export class Model {
     //             });
     //         }
     //         return;
-    //     }
-
-    //     /**
-    //      * loops up to find the sum of the column
-    //      * loops down from there to find the empty tiles below that sum
-    //      * @returns array with the sum to the right and the amount of empty tiles in the column
-    //      */
-    //     private getColumnInfo(y: number, x: number): any {
-    //         while (y >= 0 && this.matrix[y][x] instanceof PlayableTile) {
-    //             y--;
-    //         }
-    //         let tilesInfo = [];
-    //         while (y + tilesInfo.length < 9 && this.matrix[y + tilesInfo.length + 1][x] instanceof PlayableTile) {
-    //             tilesInfo.push({ y: y + tilesInfo.length + 1, x: x });
-    //         }
-
-    //         return { sum: this.matrix[y][x].colSum, tileCoords: tilesInfo };
-    //     }
-
-    //     private getRowInfo(y: number, x: number): any {
-    //         while (x >= 0 && this.matrix[y][x] instanceof PlayableTile) {
-    //             x--;
-    //         }
-    //         let tilesInfo = [];
-    //         while (x + tilesInfo.length < 9 && this.matrix[y][x + tilesInfo.length + 1] instanceof PlayableTile) {
-    //             tilesInfo.push({ y: y, x: x + tilesInfo.length + 1 });
-    //         }
-
-    //         return { sum: this.matrix[y][x].rowSum, tileCoords: tilesInfo };
     //     }
 }
 

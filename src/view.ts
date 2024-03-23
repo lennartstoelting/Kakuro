@@ -1,5 +1,3 @@
-import { Tile, PlayableTile, UnplayableTile } from "./tile";
-
 export class View {
     board: HTMLCanvasElement;
     tileSize: number;
@@ -19,12 +17,10 @@ export class View {
         this.createCanvas(matrix);
         this.drawBackground();
 
-        console.log(parseInt("1".repeat(6) + "0".repeat(9), 2));
-
         matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
-                let nodeCornerX = x * this.tileSize;
                 let nodeCornerY = y * this.tileSize;
+                let nodeCornerX = x * this.tileSize;
 
                 // the unplayable tiles with sums
                 if (tile & 511) {
@@ -39,6 +35,13 @@ export class View {
     }
 
     private drawUnplayableTile(tile: number, nodeCornerX: number, nodeCornerY: number): void {
+        let colValue = tile >> 15;
+        if (colValue) {
+            this.ctx.font = this.tileSize / 3.5 + "px Arial";
+            this.ctx.fillStyle = "white";
+            this.ctx.fillText(colValue.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding);
+        }
+
         let rowValue = (tile >> 9) & 63;
         if (rowValue) {
             this.ctx.font = this.tileSize / 3.5 + "px Arial";
@@ -48,13 +51,6 @@ export class View {
                 nodeCornerX + (this.tileSize / 3) * 2 - this.tilePadding / 2,
                 nodeCornerY + (this.tileSize / 3) * 2 - this.tilePadding
             );
-        }
-
-        let colValue = tile >> 15;
-        if (colValue) {
-            this.ctx.font = this.tileSize / 3.5 + "px Arial";
-            this.ctx.fillStyle = "white";
-            this.ctx.fillText(colValue.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding);
         }
 
         if (colValue && rowValue) {
@@ -75,13 +71,14 @@ export class View {
         this.ctx.stroke();
         this.ctx.fill();
 
-        // the already safe numbers in the tiles (e.g. if the tile has 001 000 000 written, 7 is the only number left to be placed in the tile)
+        // the already safe numbers in the tiles (e.g. if the tile has 000 001 000 written, 4 is the only number left to be placed in the tile)
+        // 000 001 000 -> nach split -> ["00000", "000"]
         let onlyPossibleNumber = tile.toString(2).split("1");
         if (onlyPossibleNumber.length === 2) {
             this.ctx.font = this.tileSize + "px Arial";
             this.ctx.fillStyle = "black";
             this.ctx.fillText(
-                (onlyPossibleNumber.toString()[1].length + 1).toString(),
+                (onlyPossibleNumber[1].length + 1).toString(),
                 nodeCornerX + (this.tileSize / 3) * 0 + this.tilePadding * 3,
                 nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding * 2
             );
