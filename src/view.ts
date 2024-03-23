@@ -15,9 +15,11 @@ export class View {
         this.borderRadius = 1;
     }
 
-    public drawBoard(matrix: any[][]): void {
+    public drawBoard(matrix: number[][]): void {
         this.createCanvas(matrix);
         this.drawBackground();
+
+        console.log(parseInt("1".repeat(6) + "0".repeat(9), 2));
 
         matrix.forEach((row, y) => {
             row.forEach((tile, x) => {
@@ -25,11 +27,10 @@ export class View {
                 let nodeCornerY = y * this.tileSize;
 
                 // the unplayable tiles with sums
-                if (tile instanceof UnplayableTile) {
-                    this.drawUnplayableTile(tile, nodeCornerX, nodeCornerY);
-                    return;
-                } else {
+                if (tile & 511) {
                     this.drawPlayableTile(tile, nodeCornerX, nodeCornerY);
+                } else {
+                    this.drawUnplayableTile(tile, nodeCornerX, nodeCornerY);
                 }
             });
         });
@@ -37,26 +38,26 @@ export class View {
         this.drawGridlines();
     }
 
-    private drawUnplayableTile(tile: UnplayableTile, nodeCornerX: number, nodeCornerY: number): void {
-        let sumRight = tile.rowSum;
-        if (sumRight) {
+    private drawUnplayableTile(tile: number, nodeCornerX: number, nodeCornerY: number): void {
+        let rowValue = (tile >> 9) & 63;
+        if (rowValue) {
             this.ctx.font = this.tileSize / 3.5 + "px Arial";
             this.ctx.fillStyle = "white";
             this.ctx.fillText(
-                sumRight.toString(),
+                rowValue.toString(),
                 nodeCornerX + (this.tileSize / 3) * 2 - this.tilePadding / 2,
                 nodeCornerY + (this.tileSize / 3) * 2 - this.tilePadding
             );
         }
 
-        let sumDown = tile.colSum;
-        if (sumDown) {
+        let colValue = tile >> 15;
+        if (colValue) {
             this.ctx.font = this.tileSize / 3.5 + "px Arial";
             this.ctx.fillStyle = "white";
-            this.ctx.fillText(sumDown.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding);
+            this.ctx.fillText(colValue.toString(), nodeCornerX + (this.tileSize / 3) * 1, nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding);
         }
 
-        if (sumDown && sumRight) {
+        if (colValue && rowValue) {
             this.ctx.beginPath();
             this.ctx.moveTo(nodeCornerX, nodeCornerY);
             this.ctx.lineTo(nodeCornerX + this.tileSize, nodeCornerY + this.tileSize);
@@ -66,7 +67,7 @@ export class View {
         }
     }
 
-    private drawPlayableTile(tile: PlayableTile, nodeCornerX: number, nodeCornerY: number): void {
+    private drawPlayableTile(tile: number, nodeCornerX: number, nodeCornerY: number): void {
         // background for playable tile
         this.ctx.beginPath();
         this.ctx.fillStyle = "lightgray";
@@ -74,22 +75,22 @@ export class View {
         this.ctx.stroke();
         this.ctx.fill();
 
-        // the already safe numbers in the tiles (e.g. if the tile has 0010000001 written, 7 is the only number left to be placed in the tile)
-        let onlyPossibleNumber = tile.onlyPossibleNumber();
-        if (onlyPossibleNumber) {
+        // the already safe numbers in the tiles (e.g. if the tile has 001 000 000 written, 7 is the only number left to be placed in the tile)
+        let onlyPossibleNumber = tile.toString(2).split("1");
+        if (onlyPossibleNumber.length === 2) {
             this.ctx.font = this.tileSize + "px Arial";
             this.ctx.fillStyle = "black";
             this.ctx.fillText(
-                onlyPossibleNumber.toString(),
+                (onlyPossibleNumber.toString()[1].length + 1).toString(),
                 nodeCornerX + (this.tileSize / 3) * 0 + this.tilePadding * 3,
                 nodeCornerY + (this.tileSize / 3) * 3 - this.tilePadding * 2
             );
             return;
         }
 
-        // the noted numbers in the tiles
+        // the candidate numbers in the tiles
         for (let i = 0; i < 9; i++) {
-            if (!(tile.num & (2 ** i))) continue;
+            if (!(tile & (2 ** i))) continue;
 
             this.ctx.font = this.tileSize / 3.5 + "px Arial";
             this.ctx.fillStyle = "grey";
