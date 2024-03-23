@@ -13,7 +13,7 @@ class Controller {
     solveAllButton: HTMLButtonElement;
 
     constructor() {
-        this.model = new Model(levels.medium[0]);
+        this.model = new Model(levels.easy[0]);
         this.view = new View();
 
         this.getDomElements();

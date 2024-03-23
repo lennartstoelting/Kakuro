@@ -83,14 +83,9 @@ export class Model {
             );
 
         for (let binCombination = 1; binCombination <= parseInt("111111111", 2); binCombination++) {
-            let amountOfOnes = binCombination.toString(2).split("1").length - 1;
-            let sum = 0;
-            for (let j = 0; j < 9; j++) {
-                if (binCombination & (2 ** j)) {
-                    sum += j + 1;
-                }
-            }
-            table[sum][amountOfOnes].push(binCombination);
+            let candidatesDecArr = this.candidatesAsReadableArray(binCombination);
+            let sum = candidatesDecArr.reduce((acc, cur) => acc + cur, 0);
+            table[sum][candidatesDecArr.length].push(binCombination);
         }
 
         return table;
@@ -114,6 +109,9 @@ export class Model {
                 this.solveTile(tile, y, x);
             });
         });
+
+        console.log("--- solved step ---");
+
         return;
     }
 
@@ -129,64 +127,47 @@ export class Model {
         let colPermutations = this.sumTable[colInfo.sum][colInfo.jointTiles.length];
         let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length];
 
-        // filtered permutations by removing rued out candidates
+        // removing permutations that don't include any of the tiles candidates
+        // this can probably be specified more precicely by not only filtering what the candidates in this tile are, but also what the fixed numbers in the other tiles are
         colPermutations = colPermutations.filter((permutation) => permutation & candidates);
         rowPermutations = rowPermutations.filter((permutation) => permutation & candidates);
 
+        // --- sudoku rules ---
+        // i not only want to check for numbers that are fixed in other tiles but also for tiles that have overlapping candidates
+        // meaning of course, if another tile has a fixed 2 in it, we want to strike out the 2 in this tile
+        // but what if for example two different tiles in the same row both have only the 8 or 9 as candidates left?
+        // then we can strike out the 8 and 9 in this tile because they have to be in those other tiles one each
+        // same goes for three tiles in a row that have 8, 9 and 7 as candidates left. The hard part is to cross reference three tiles where one has 8 and 9, one has 8 and 7 and one has 9 and 7
+        // in that case all three numbers are used and can no longer occour in this tile but how to check for that?
+
+        // let temp = this.candidatesAsReadableArray(candidates);
+        // if (temp.length === 1) {
+        //     colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+        //         if (tile.x === x && tile.y === y) return;
+        //         this.matrix[tile.y][tile.x] &= ~candidates;
+        //     });
+        //     rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+        //         if (tile.x === x && tile.y === y) return;
+        //         this.matrix[tile.y][tile.x] &= ~candidates;
+        //     });
+        // }
+
+        // temporary, needs to be made into several steps
         this.matrix[y][x] = this.reduceToSuperposition(colPermutations) & this.reduceToSuperposition(rowPermutations);
 
         return;
     }
 
-    private getColumnInfo(y: number, x: number): any {
-        while (y >= 0 && this.matrix[y][x] & 511) {
-            y--;
-        }
-        let colCoordinates = [];
-        while (y + colCoordinates.length < 9 && this.matrix[y + colCoordinates.length + 1][x] & 511) {
-            colCoordinates.push({ y: y + colCoordinates.length + 1, x: x });
-        }
-
-        return { sum: this.matrix[y][x] >> 15, jointTiles: colCoordinates };
-    }
-
-    private getRowInfo(y: number, x: number): any {
-        while (x >= 0 && this.matrix[y][x] & 511) {
-            x--;
-        }
-        let rowCoordinates = [];
-        while (x + rowCoordinates.length < 9 && this.matrix[y][x + rowCoordinates.length + 1] & 511) {
-            rowCoordinates.push({ y: y, x: x + rowCoordinates.length + 1 });
-        }
-
-        return { sum: (this.matrix[y][x] >> 9) & 63, jointTiles: rowCoordinates };
-    }
-
-    private reduceToSuperposition(permutations: number[]): number {
-        return permutations.reduce((acc, cur) => {
-            acc |= cur;
-            return acc;
-        }, 0);
-    }
-
     // for pretty console output
     private visualizeStateOfTile(x: number, y: number): void {
         let candidateString = ("000000000" + this.matrix[y][x].toString(2)).slice(-9);
-        console.log("State of Tile at x: " + x + " and y: " + y + " is " + candidateString);
+        console.log(`State of Tile at x: ${x} and y: ${y} is \n${candidateString} or ${this.candidatesAsReadableArray(this.matrix[y][x])}`);
     }
 
     //     public solveStep(): void {
-    //         this.matrix.forEach((row, y) => {
-    //             row.forEach((tile, x) => {
-    //                 if (tile instanceof UnplayableTile) {
-    //                     return;
-    //                 }
 
     //                 let rowInfo = this.getRowInfo(y, x);
     //                 let colInfo = this.getColumnInfo(y, x);
-
-    //                 // putting some of that info into specific variables for better readability might be helpful
-    //                 // also, maybe to get rid of the necesseity of the .num at the end of each matrix call, I could consider having the matrix in the form of matrix: (UnplayableTile | number)[][]
 
     //                 // all permutations with given tile amount to sum
     //                 let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.tileCoords.length];
@@ -273,6 +254,47 @@ export class Model {
     //         }
     //         return;
     //     }
+
+    private getColumnInfo(y: number, x: number): { sum: number; jointTiles: { x: number; y: number }[] } {
+        while (y >= 0 && this.matrix[y][x] & 511) {
+            y--;
+        }
+        let colCoordinates: { x: number; y: number }[] = [];
+        while (y + colCoordinates.length < 9 && this.matrix[y + colCoordinates.length + 1][x] & 511) {
+            colCoordinates.push({ y: y + colCoordinates.length + 1, x: x });
+        }
+
+        return { sum: this.matrix[y][x] >> 15, jointTiles: colCoordinates };
+    }
+
+    private getRowInfo(y: number, x: number): { sum: number; jointTiles: { x: number; y: number }[] } {
+        while (x >= 0 && this.matrix[y][x] & 511) {
+            x--;
+        }
+        let rowCoordinates: { x: number; y: number }[] = [];
+        while (x + rowCoordinates.length < 9 && this.matrix[y][x + rowCoordinates.length + 1] & 511) {
+            rowCoordinates.push({ y: y, x: x + rowCoordinates.length + 1 });
+        }
+
+        return { sum: (this.matrix[y][x] >> 9) & 63, jointTiles: rowCoordinates };
+    }
+
+    private reduceToSuperposition(permutations: number[]): number {
+        return permutations.reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
+    }
+
+    private candidatesAsReadableArray(binary: number): number[] {
+        let candidates: number[] = [];
+        for (let i = 0; i < 9; i++) {
+            if (binary & (2 ** i)) {
+                candidates.push(i + 1);
+            }
+        }
+        return candidates;
+    }
 }
 
 /**
