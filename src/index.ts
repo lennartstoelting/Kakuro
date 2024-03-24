@@ -11,6 +11,7 @@ class Controller {
     // buttons
     solveOneStepButton: HTMLButtonElement;
     solveAllButton: HTMLButtonElement;
+    debug1: HTMLButtonElement;
 
     constructor() {
         this.model = new Model(levels.easy[0]);
@@ -25,6 +26,7 @@ class Controller {
     private getDomElements(): void {
         this.solveOneStepButton = document.getElementById("solve-step") as HTMLButtonElement;
         this.solveAllButton = document.getElementById("solve-all") as HTMLButtonElement;
+        this.debug1 = document.getElementById("b1") as HTMLButtonElement;
     }
 
     private initEventListeners(): void {
@@ -40,6 +42,10 @@ class Controller {
         this.solveAllButton.addEventListener("click", () => {
             this.model.solveAll();
             this.updateView();
+        });
+
+        this.debug1.addEventListener("click", () => {
+            return;
         });
     }
 
