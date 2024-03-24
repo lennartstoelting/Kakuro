@@ -161,6 +161,20 @@ export class Model {
             colPermutations = colPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
         }
 
+        let possibleNumbers = this.candidatesAsReadableArray(this.matrix[y][x]);
+        let leftoverRowPermutations = 0;
+        possibleNumbers.forEach((num) => {
+            let rowPermutationsForNum = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
+            rowPermutationsForNum = rowPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
+            rowPermutationsForNum.forEach((permutation) => {
+                leftoverRowPermutations |= permutation;
+            });
+        });
+        rowInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
+            if (coords.x === x && coords.y === y) return;
+            this.matrix[coords.y][coords.x] &= leftoverRowPermutations;
+        });
+
         let colSuperPosition = this.reduceToSuperposition(colPermutations);
         let rowSuperPosition = this.reduceToSuperposition(rowPermutations);
 
