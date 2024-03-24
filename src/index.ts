@@ -14,7 +14,7 @@ class Controller {
     debug1: HTMLButtonElement;
 
     constructor() {
-        this.model = new Model(levels.extreme[0]);
+        this.model = new Model(levels.challenging[0]);
         this.view = new View();
 
         this.getDomElements();

@@ -255,8 +255,8 @@ export class Model {
  * - readability:               make the code more readable by adding comments to the code
  * - error handling:            add error handling for the case that the input matrix is not valid
  * - error handling:            add error handling for the case that the sum of the row or the column isn't valid
- * - rules:                     for easy[1], specify a rule that, in case some numbers are already fixed as the final numbers, reapplies the sumTable (if you have three tiles in a row and one is already safe, the sum of the other two tiles can be recalculated and tested against the sumTable)
+ *
+ * DONE:
  * - rules:                     for easy[1], specify a rule that solves row 2 by realizing that only 8 and 9 are already fixed for the final permutation and adjust the other tiles accordingly
- *
- *
+ * - rules:                     for easy[1], specify a rule that, in case some numbers are already fixed as the final numbers, reapplies the sumTable (if you have three tiles in a row and one is already safe, the sum of the other two tiles can be recalculated and tested against the sumTable)
  */
