@@ -54,12 +54,6 @@ export class Model {
     }
 
     /**
-     * i want to do a general table where all the combinations of 2 up to 9 numbers are listed and the sum of them is calculated
-     * the resulting sum is the index of where to find these combinations in the table
-     * at that index, the combinations are stored as a 9 bit number, where the bit is 1 if the number is in the combination
-     * the table is a 45 element array
-     * at each index, the amount of numbers that make up the sum is stored at the index of it's amount
-     * the matrix looks as follows:
      *
      * [[],                         0
      *  [],                         1
@@ -69,8 +63,8 @@ export class Model {
      *  [[],[],[6,9]],              5
      *  [[],[],[10,17],[7]]]        6
      *  [[],[],[33,18, 12],[11]]    7
-     * the first index is the sum (#45), the second index is the amount of numbers that make up the sum(#9),
-     * each of the numbers from that point are meant to be read in binary, having a 1 everywhere the number is in the combination
+     *
+     * @returns a 45x9x? table with all possible combinations of 2 to 9 numbers and their sum as the first index
      */
     private initSumTable(): number[][][] {
         // create a 45x9x? empty array
@@ -82,7 +76,7 @@ export class Model {
                     .map(() => [])
             );
 
-        for (let binCombination = 1; binCombination <= parseInt("111111111", 2); binCombination++) {
+        for (let binCombination = 3; binCombination <= parseInt("111111111", 2); binCombination++) {
             let candidatesDecArr = this.candidatesAsReadableArray(binCombination);
             let sum = candidatesDecArr.reduce((acc, cur) => acc + cur, 0);
             table[sum][candidatesDecArr.length].push(binCombination);
@@ -93,11 +87,16 @@ export class Model {
 
     public solveAll(): void {
         let changesMade = true;
+        let solvingSteps = -1;
+
         while (changesMade) {
             let oldMatrix = JSON.parse(JSON.stringify(this.matrix));
             this.solveStep();
             changesMade = JSON.stringify(oldMatrix) !== JSON.stringify(this.matrix);
+            solvingSteps++;
         }
+
+        console.log(`solved in ${solvingSteps} steps`);
     }
 
     public solveStep(): void {
@@ -110,13 +109,10 @@ export class Model {
             });
         });
 
-        console.log("--- solved step ---");
-
         return;
     }
 
     public solveTile(y: number, x: number): void {
-        // ----- column + row -----
         let colSuperPosition = this.colPermutations(y, x);
         let rowSuperPosition = this.rowPermutations(y, x);
 
@@ -125,21 +121,21 @@ export class Model {
     }
 
     colPermutations(y: number, x: number): number {
-        let colInfo = this.getColumnInfo(y, x);
-        let colPermutations = this.sumTable[colInfo.sum][colInfo.jointTiles.length];
+        let col = this.getColumnInfo(y, x);
+        let colPermutations = this.sumTable[col.sum][col.tiles.length];
 
         let otherCandidatesinCol: number[] = [];
 
         let leftoverColPermutations = 0;
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
-            let colPermutationsForNum = this.sumTable[colInfo.sum][colInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
+            let colPermutationsForNum = this.sumTable[col.sum][col.tiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
             colPermutationsForNum = colPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
             colPermutationsForNum.forEach((permutation) => {
                 leftoverColPermutations |= permutation;
             });
         });
 
-        colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+        col.tiles.forEach((tile: { x: number; y: number }) => {
             // removing permutations that don't include any of the tiles candidates
             colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
@@ -162,21 +158,21 @@ export class Model {
     }
 
     rowPermutations(y: number, x: number): number {
-        let rowInfo = this.getRowInfo(y, x);
-        let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length];
+        let row = this.getRowInfo(y, x);
+        let rowPermutations = this.sumTable[row.sum][row.tiles.length];
 
         let otherCandidatesinRow: number[] = [];
 
         let leftoverRowPermutations = 0;
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
-            let rowPermutationsForNum = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
+            let rowPermutationsForNum = this.sumTable[row.sum][row.tiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
             rowPermutationsForNum = rowPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
             rowPermutationsForNum.forEach((permutation) => {
                 leftoverRowPermutations |= permutation;
             });
         });
 
-        rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+        row.tiles.forEach((tile: { x: number; y: number }) => {
             // removing permutations that don't include any of the tiles candidates
             rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
@@ -198,7 +194,7 @@ export class Model {
         return this.reduceToSuperposition(rowPermutations);
     }
 
-    private getColumnInfo(y: number, x: number): { sum: number; jointTiles: { x: number; y: number }[] } {
+    private getColumnInfo(y: number, x: number): { sum: number; tiles: { x: number; y: number }[] } {
         while (y >= 0 && this.matrix[y][x] & 511) {
             y--;
         }
@@ -207,10 +203,10 @@ export class Model {
             colCoordinates.push({ y: y + colCoordinates.length + 1, x: x });
         }
 
-        return { sum: this.matrix[y][x] >> 15, jointTiles: colCoordinates };
+        return { sum: this.matrix[y][x] >> 15, tiles: colCoordinates };
     }
 
-    private getRowInfo(y: number, x: number): { sum: number; jointTiles: { x: number; y: number }[] } {
+    private getRowInfo(y: number, x: number): { sum: number; tiles: { x: number; y: number }[] } {
         while (x >= 0 && this.matrix[y][x] & 511) {
             x--;
         }
@@ -219,14 +215,7 @@ export class Model {
             rowCoordinates.push({ y: y, x: x + rowCoordinates.length + 1 });
         }
 
-        return { sum: (this.matrix[y][x] >> 9) & 63, jointTiles: rowCoordinates };
-    }
-
-    private reduceToSuperposition(permutations: number[]): number {
-        return permutations.reduce((acc, cur) => {
-            acc |= cur;
-            return acc;
-        }, 0);
+        return { sum: (this.matrix[y][x] >> 9) & 63, tiles: rowCoordinates };
     }
 
     private candidatesAsReadableArray(binary: number): number[] {
@@ -237,6 +226,13 @@ export class Model {
             }
         }
         return candidates;
+    }
+
+    private reduceToSuperposition(permutations: number[]): number {
+        return permutations.reduce((acc, cur) => {
+            acc |= cur;
+            return acc;
+        }, 0);
     }
 }
 
@@ -249,6 +245,8 @@ export class Model {
  * - readability:               make the code more readable by adding comments to the code
  * - error handling:            add error handling for the case that the input matrix is not valid
  * - error handling:            add error handling for the case that the sum of the row or the column isn't valid
+ * - mechanics:                 level selection and level change
+ * - mechanics:                 similar to solve, add a create level function that creates a level randomly
  *
  * DONE:
  * - rules:                     for easy[1], specify a rule that solves row 2 by realizing that only 8 and 9 are already fixed for the final permutation and adjust the other tiles accordingly
