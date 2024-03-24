@@ -47,7 +47,7 @@ export class View {
             this.ctx.font = this.tileSize / 3.5 + "px Arial";
             this.ctx.fillStyle = "white";
             this.ctx.fillText(
-                rowValue.toString(),
+                ("  " + rowValue.toString()).slice(-2),
                 nodeCornerX + (this.tileSize / 3) * 2 - this.tilePadding / 2,
                 nodeCornerY + (this.tileSize / 3) * 2 - this.tilePadding
             );

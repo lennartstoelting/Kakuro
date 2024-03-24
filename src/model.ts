@@ -131,6 +131,8 @@ export class Model {
             rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
         });
 
+        // --- sudoku rules ---
+
         let otherCandidatesinRow: number[] = [];
         rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
             if (tile.x === x && tile.y === y) return;
