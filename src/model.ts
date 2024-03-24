@@ -178,6 +178,18 @@ export class Model {
             if (coords.x === x && coords.y === y) return;
             this.matrix[coords.y][coords.x] &= leftoverRowPermutations;
         });
+        let leftoverColPermutations = 0;
+        possibleNumbers.forEach((num) => {
+            let colPermutationsForNum = this.sumTable[colInfo.sum][colInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
+            colPermutationsForNum = colPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
+            colPermutationsForNum.forEach((permutation) => {
+                leftoverColPermutations |= permutation;
+            });
+        });
+        colInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
+            if (coords.x === x && coords.y === y) return;
+            this.matrix[coords.y][coords.x] &= leftoverColPermutations;
+        });
 
         // --- end of rule out permutations in other tiles based on possible permutations from this tile ---
 
