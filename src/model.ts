@@ -161,6 +161,10 @@ export class Model {
             colPermutations = colPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
         }
 
+        // --- end of sudoku rules ---
+
+        // --- rule out permutations in other tiles based on possible permutations from this tile
+
         let possibleNumbers = this.candidatesAsReadableArray(this.matrix[y][x]);
         let leftoverRowPermutations = 0;
         possibleNumbers.forEach((num) => {
@@ -174,6 +178,8 @@ export class Model {
             if (coords.x === x && coords.y === y) return;
             this.matrix[coords.y][coords.x] &= leftoverRowPermutations;
         });
+
+        // --- end of rule out permutations in other tiles based on possible permutations from this tile ---
 
         let colSuperPosition = this.reduceToSuperposition(colPermutations);
         let rowSuperPosition = this.reduceToSuperposition(rowPermutations);
