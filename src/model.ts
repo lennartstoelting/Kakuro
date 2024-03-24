@@ -116,42 +116,39 @@ export class Model {
     }
 
     public solveTile(y: number, x: number): void {
+        // ----- column + row -----
+        let colSuperPosition = this.colPermutations(y, x);
+        let rowSuperPosition = this.rowPermutations(y, x);
+
+        this.matrix[y][x] &= colSuperPosition & rowSuperPosition;
+        return;
+    }
+
+    colPermutations(y: number, x: number): number {
         let colInfo = this.getColumnInfo(y, x);
-        let rowInfo = this.getRowInfo(y, x);
-
-        // all permutations where the given jointTiles amount to sum
         let colPermutations = this.sumTable[colInfo.sum][colInfo.jointTiles.length];
-        let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length];
-
-        // removing permutations that don't include any of the tiles candidates
-        colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
-            colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
-        });
-        rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
-            rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
-        });
-
-        // --- sudoku rules ---
-
-        let otherCandidatesinRow: number[] = [];
-        rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
-            if (tile.x === x && tile.y === y) return;
-            otherCandidatesinRow.push(this.matrix[tile.y][tile.x]);
-        });
-        let rowCandidatesCounted = otherCandidatesinRow.reduce((cnt: any, cur: any) => ((cnt[cur] = cnt[cur] + 1 || 1), cnt), {});
-        for (const [key, value] of Object.entries(rowCandidatesCounted)) {
-            if (this.candidatesAsReadableArray(parseInt(key)).length !== value) continue;
-            // I can cross off the matrix candidates sudoku style
-            this.matrix[y][x] &= ~parseInt(key);
-            // and I can adapt the permutations
-            rowPermutations = rowPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
-        }
 
         let otherCandidatesinCol: number[] = [];
-        colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
-            if (tile.x === x && tile.y === y) return;
-            otherCandidatesinCol.push(this.matrix[tile.y][tile.x]);
+
+        let leftoverColPermutations = 0;
+        this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
+            let colPermutationsForNum = this.sumTable[colInfo.sum][colInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
+            colPermutationsForNum = colPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
+            colPermutationsForNum.forEach((permutation) => {
+                leftoverColPermutations |= permutation;
+            });
         });
+
+        colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+            // removing permutations that don't include any of the tiles candidates
+            colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
+            if (tile.x === x && tile.y === y) return;
+            // setup for sudoku rules
+            otherCandidatesinCol.push(this.matrix[tile.y][tile.x]);
+            // rule out permutations in other tiles based on possible permutations from this tile
+            this.matrix[tile.y][tile.x] &= leftoverColPermutations;
+        });
+
         let colCandidatesCounted = otherCandidatesinCol.reduce((cnt: any, cur: any) => ((cnt[cur] = cnt[cur] + 1 || 1), cnt), {});
         for (const [key, value] of Object.entries(colCandidatesCounted)) {
             if (this.candidatesAsReadableArray(parseInt(key)).length !== value) continue;
@@ -161,21 +158,17 @@ export class Model {
             colPermutations = colPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
         }
 
-        // --- end of sudoku rules ---
+        return this.reduceToSuperposition(colPermutations);
+    }
 
-        // --- rule out permutations in other tiles based on possible permutations from this tile
+    rowPermutations(y: number, x: number): number {
+        let rowInfo = this.getRowInfo(y, x);
+        let rowPermutations = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length];
 
-        let possibleNumbers = this.candidatesAsReadableArray(this.matrix[y][x]);
-        let leftoverColPermutations = 0;
+        let otherCandidatesinRow: number[] = [];
+
         let leftoverRowPermutations = 0;
-
-        possibleNumbers.forEach((num) => {
-            let colPermutationsForNum = this.sumTable[colInfo.sum][colInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
-            colPermutationsForNum = colPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
-            colPermutationsForNum.forEach((permutation) => {
-                leftoverColPermutations |= permutation;
-            });
-
+        this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             let rowPermutationsForNum = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
             rowPermutationsForNum = rowPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
             rowPermutationsForNum.forEach((permutation) => {
@@ -183,28 +176,27 @@ export class Model {
             });
         });
 
-        colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
-            if (tile.x === x && tile.y === y) return;
-            this.matrix[tile.y][tile.x] &= leftoverColPermutations;
-        });
-
         rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+            // removing permutations that don't include any of the tiles candidates
+            rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
+            // setup for sudoku rules
+            otherCandidatesinRow.push(this.matrix[tile.y][tile.x]);
+            // rule out permutations in other tiles based on possible permutations from this tile
             this.matrix[tile.y][tile.x] &= leftoverRowPermutations;
         });
 
-        // --- end of rule out permutations in other tiles based on possible permutations from this tile ---
+        let rowCandidatesCounted = otherCandidatesinRow.reduce((cnt: any, cur: any) => ((cnt[cur] = cnt[cur] + 1 || 1), cnt), {});
+        for (const [key, value] of Object.entries(rowCandidatesCounted)) {
+            if (this.candidatesAsReadableArray(parseInt(key)).length !== value) continue;
+            // I can cross off the matrix candidates sudoku style
+            this.matrix[y][x] &= ~parseInt(key);
+            // and I can adapt the permutations
+            rowPermutations = rowPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
+        }
 
-        let colSuperPosition = this.reduceToSuperposition(colPermutations);
-        let rowSuperPosition = this.reduceToSuperposition(rowPermutations);
-
-        // temporary, needs to be made into several steps
-        this.matrix[y][x] &= colSuperPosition & rowSuperPosition;
-
-        return;
+        return this.reduceToSuperposition(rowPermutations);
     }
-
-    // private solveCombinedPermutations() {}
 
     private getColumnInfo(y: number, x: number): { sum: number; jointTiles: { x: number; y: number }[] } {
         while (y >= 0 && this.matrix[y][x] & 511) {
