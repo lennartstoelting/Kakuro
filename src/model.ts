@@ -204,6 +204,8 @@ export class Model {
         return;
     }
 
+    // private solveCombinedPermutations() {}
+
     private getColumnInfo(y: number, x: number): { sum: number; jointTiles: { x: number; y: number }[] } {
         while (y >= 0 && this.matrix[y][x] & 511) {
             y--;
