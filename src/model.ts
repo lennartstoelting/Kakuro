@@ -166,29 +166,31 @@ export class Model {
         // --- rule out permutations in other tiles based on possible permutations from this tile
 
         let possibleNumbers = this.candidatesAsReadableArray(this.matrix[y][x]);
-        let leftoverRowPermutations = 0;
-        possibleNumbers.forEach((num) => {
-            let rowPermutationsForNum = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
-            rowPermutationsForNum = rowPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
-            rowPermutationsForNum.forEach((permutation) => {
-                leftoverRowPermutations |= permutation;
-            });
-        });
-        rowInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
-            if (coords.x === x && coords.y === y) return;
-            this.matrix[coords.y][coords.x] &= leftoverRowPermutations;
-        });
         let leftoverColPermutations = 0;
+        let leftoverRowPermutations = 0;
+
         possibleNumbers.forEach((num) => {
             let colPermutationsForNum = this.sumTable[colInfo.sum][colInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
             colPermutationsForNum = colPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
             colPermutationsForNum.forEach((permutation) => {
                 leftoverColPermutations |= permutation;
             });
+
+            let rowPermutationsForNum = this.sumTable[rowInfo.sum][rowInfo.jointTiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
+            rowPermutationsForNum = rowPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
+            rowPermutationsForNum.forEach((permutation) => {
+                leftoverRowPermutations |= permutation;
+            });
         });
+
         colInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
             if (coords.x === x && coords.y === y) return;
             this.matrix[coords.y][coords.x] &= leftoverColPermutations;
+        });
+
+        rowInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
+            if (coords.x === x && coords.y === y) return;
+            this.matrix[coords.y][coords.x] &= leftoverRowPermutations;
         });
 
         // --- end of rule out permutations in other tiles based on possible permutations from this tile ---
