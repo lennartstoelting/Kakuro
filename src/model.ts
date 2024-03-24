@@ -183,14 +183,14 @@ export class Model {
             });
         });
 
-        colInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
-            if (coords.x === x && coords.y === y) return;
-            this.matrix[coords.y][coords.x] &= leftoverColPermutations;
+        colInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+            if (tile.x === x && tile.y === y) return;
+            this.matrix[tile.y][tile.x] &= leftoverColPermutations;
         });
 
-        rowInfo.jointTiles.forEach((coords: { x: number; y: number }) => {
-            if (coords.x === x && coords.y === y) return;
-            this.matrix[coords.y][coords.x] &= leftoverRowPermutations;
+        rowInfo.jointTiles.forEach((tile: { x: number; y: number }) => {
+            if (tile.x === x && tile.y === y) return;
+            this.matrix[tile.y][tile.x] &= leftoverRowPermutations;
         });
 
         // --- end of rule out permutations in other tiles based on possible permutations from this tile ---
