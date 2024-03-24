@@ -8,9 +8,12 @@ export class View {
     private ctx: CanvasRenderingContext2D;
     private boardContainer: HTMLDivElement;
 
+    solvingInProgress: boolean;
+
     constructor() {
         this.boardContainer = document.getElementById("board-container") as HTMLDivElement;
         this.borderRadius = 1;
+        this.solvingInProgress = false;
     }
 
     public drawBoard(matrix: number[][]): void {
@@ -70,6 +73,8 @@ export class View {
         this.ctx.rect(nodeCornerX, nodeCornerY, this.tileSize, this.tileSize);
         this.ctx.stroke();
         this.ctx.fill();
+
+        if (!this.solvingInProgress) return;
 
         // the already safe numbers in the tiles (e.g. if the tile has 000 001 000 written, 4 is the only number left to be placed in the tile)
         // 000 001 000 -> nach split -> ["00000", "000"]

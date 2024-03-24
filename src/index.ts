@@ -35,11 +35,13 @@ class Controller {
         });
 
         this.solveOneStepButton.addEventListener("click", () => {
+            this.view.solvingInProgress = true;
             this.model.solveStep();
             this.updateView();
         });
 
         this.solveAllButton.addEventListener("click", () => {
+            this.view.solvingInProgress = true;
             this.model.solveAll();
             this.updateView();
         });
