@@ -14,7 +14,7 @@ class Controller {
     debug1: HTMLButtonElement;
 
     constructor() {
-        this.model = new Model(levels.easy[0]);
+        this.model = new Model(levels.medium[0]);
         this.view = new View();
 
         this.getDomElements();
@@ -45,7 +45,8 @@ class Controller {
         });
 
         this.debug1.addEventListener("click", () => {
-            return;
+            this.model.solveTile(8, 2);
+            this.updateView();
         });
     }
 
