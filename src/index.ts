@@ -14,7 +14,7 @@ class Controller {
     debug1: HTMLButtonElement;
 
     constructor() {
-        this.model = new Model(levels.medium[0]);
+        this.model = new Model(levels.extreme[2]);
         this.view = new View();
 
         this.getDomElements();
@@ -77,6 +77,7 @@ const app = new Controller();
  * - error handling:            add error handling for the case that the sum of the row or the column isn't valid
  * - mechanics:                 level selection and level change
  * - mechanics:                 similar to solve, add a create level function that creates a level randomly
+ * - rules:                     for extreme [2] at y: 8, x: 2, the number 3 can be eliminated due to the possible permutations when trying different numbers in the other tiles
  *
  * DONE:
  * - rules:                     for easy[1], specify a rule that solves row 2 by realizing that only 8 and 9 are already fixed for the final permutation and adjust the other tiles accordingly
