@@ -124,6 +124,12 @@ export class Model {
         let col = this.getColumnInfo(y, x);
         let colPermutations = this.sumTable[col.sum][col.tiles.length];
 
+        let candidatesInOtherTiles = 0;
+        col.tiles.forEach((tile: { y: number; x: number }) => {
+            if (tile.x === x && tile.y === y) return;
+            candidatesInOtherTiles |= this.matrix[tile.y][tile.x];
+        });
+
         let leftoverColPermutations = 0;
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             let candidateNotation = 2 ** (num - 1);
@@ -132,6 +138,17 @@ export class Model {
             colPermutationsWithThisNum.forEach((permutation) => {
                 leftoverColPermutations |= permutation;
             });
+
+            let specificCandidateWorksOut = false;
+            colPermutationsWithThisNum.forEach((permutation) => {
+                if ((permutation & candidatesInOtherTiles) === permutation) {
+                    specificCandidateWorksOut = true;
+                }
+            });
+            // console.log(`specific candidate works out: ${specificCandidateWorksOut}`);
+            if (!specificCandidateWorksOut) {
+                this.matrix[y][x] &= ~candidateNotation;
+            }
         });
 
         let otherCandidatesinCol: number[] = [];
