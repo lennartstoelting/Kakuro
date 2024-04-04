@@ -164,6 +164,12 @@ export class Model {
         // in the beginning these are just all possible permutations for the sum and the amount of tiles in the row
         let rowPermutations = this.sumTable[row.sum][row.tiles.length];
 
+        let candidatesInOtherTiles = 0;
+        row.tiles.forEach((tile: { y: number; x: number }) => {
+            if (tile.x === x && tile.y === y) return;
+            candidatesInOtherTiles |= this.matrix[tile.y][tile.x];
+        });
+
         let leftoverRowPermutations = 0;
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             // example: if the tile we are currently looking at has a 1 and a 3 as candidates
@@ -183,6 +189,42 @@ export class Model {
             rowPermutationsWithThisNum.forEach((permutation) => {
                 leftoverRowPermutations |= permutation;
             });
+
+            // at this point we can also look inwards to this tile and remove any candidate that canÄt be fullfilled with any combination of candidates in the other tiles
+            // solution idea: go through all possible numbers (in this case 1 and 3) and check if that number would be used if the other tiles can be filled with the remaining sum
+            // in this case, the 3 would mean that the other tiles have a restsum of 9 and that can not be achieved.
+            // or another solution could be to have the two remaining rowpermutations 100 000 011 and 010 000 101, then trying out with the 3 would reduce the leftover permutation to be only the second one 010 000 101, the 3 taken away which leaves 010 000 001, which is not a valid permutation when looking at the leftover tiles
+            console.log(
+                `current candidate: ${num}\nrowpermutations without candidate: ${rowPermutationsWithThisNum.map((permutation) =>
+                    permutation.toString(2)
+                )}\ncandidates in the surrounding tiles: ${candidatesInOtherTiles.toString(2)}`
+            );
+
+            // I have to go through the row and get all the possible candidates in the tiles other than this one
+            // then I should be able to cross reference them with the rowPermutationsWithThisNum Array and see if they are even achievable
+            // this can be done outside of this loop because we are not looking to change these numbers while in the loop
+
+            // for the number 1, i have logged the following:
+            // current candidate: 1,
+            // rowpermutations without candidate: 110000,1001000,10000100,100000010
+            // candidates in the surrounding tiles: 110000110
+
+            // for the number 3, i have logged the following:
+            // current candidate: 3
+            // rowpermutations without candidate: 11000,1000010,10000001
+            // candidates in the surrounding tiles: 110000110
+
+            // for both cases, one thing has to be true
+            // when we check rowpermutations without candidate (or rowPermutationsWithThisNum) and the candidates in the surrounding tiles
+            // at least one of the rowpermutations has to be achievable with the candidates in the surrounding tiles
+
+            let specificCandidateWorksOut = false;
+            rowPermutationsWithThisNum.forEach((permutation) => {
+                if ((permutation & candidatesInOtherTiles) === permutation) {
+                    specificCandidateWorksOut = true;
+                }
+            });
+            console.log(`specific candidate works out: ${specificCandidateWorksOut}`);
         });
 
         let otherCandidatesinRow: number[] = [];
