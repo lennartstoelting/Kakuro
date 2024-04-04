@@ -190,41 +190,26 @@ export class Model {
                 leftoverRowPermutations |= permutation;
             });
 
-            // at this point we can also look inwards to this tile and remove any candidate that canÄt be fullfilled with any combination of candidates in the other tiles
-            // solution idea: go through all possible numbers (in this case 1 and 3) and check if that number would be used if the other tiles can be filled with the remaining sum
-            // in this case, the 3 would mean that the other tiles have a restsum of 9 and that can not be achieved.
-            // or another solution could be to have the two remaining rowpermutations 100 000 011 and 010 000 101, then trying out with the 3 would reduce the leftover permutation to be only the second one 010 000 101, the 3 taken away which leaves 010 000 001, which is not a valid permutation when looking at the leftover tiles
-            console.log(
-                `current candidate: ${num}\nrowpermutations without candidate: ${rowPermutationsWithThisNum.map((permutation) =>
-                    permutation.toString(2)
-                )}\ncandidates in the surrounding tiles: ${candidatesInOtherTiles.toString(2)}`
-            );
+            // console.log(
+            // `current candidate: ${num}\nrowpermutations without candidate: ${rowPermutationsWithThisNum.map((permutation) =>
+            // permutation.toString(2)
+            // )}\ncandidates in the surrounding tiles: ${candidatesInOtherTiles.toString(2)}`
+            // );
 
-            // I have to go through the row and get all the possible candidates in the tiles other than this one
-            // then I should be able to cross reference them with the rowPermutationsWithThisNum Array and see if they are even achievable
-            // this can be done outside of this loop because we are not looking to change these numbers while in the loop
-
-            // for the number 1, i have logged the following:
-            // current candidate: 1,
-            // rowpermutations without candidate: 110000,1001000,10000100,100000010
-            // candidates in the surrounding tiles: 110000110
-
-            // for the number 3, i have logged the following:
-            // current candidate: 3
-            // rowpermutations without candidate: 11000,1000010,10000001
-            // candidates in the surrounding tiles: 110000110
-
-            // for both cases, one thing has to be true
-            // when we check rowpermutations without candidate (or rowPermutationsWithThisNum) and the candidates in the surrounding tiles
-            // at least one of the rowpermutations has to be achievable with the candidates in the surrounding tiles
-
+            // for each candidate being checked in this tile, we assume that it will not find a matching solution
+            // we check the if all the candidates in the other tiles can be combined into a permutation that has this current num in it
+            // this is done by filtering out the permutations that have this current num, then remuving the currrent num from them
+            // and then seing if the permutations that are left can be achieved with the candidates in the other tiles
             let specificCandidateWorksOut = false;
             rowPermutationsWithThisNum.forEach((permutation) => {
                 if ((permutation & candidatesInOtherTiles) === permutation) {
                     specificCandidateWorksOut = true;
                 }
             });
-            console.log(`specific candidate works out: ${specificCandidateWorksOut}`);
+            // console.log(`specific candidate works out: ${specificCandidateWorksOut}`);
+            if (!specificCandidateWorksOut) {
+                this.matrix[y][x] &= ~candidateNotation;
+            }
         });
 
         let otherCandidatesinRow: number[] = [];
