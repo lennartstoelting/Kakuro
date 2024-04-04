@@ -78,6 +78,9 @@ const app = new Controller();
  * - mechanics:                 level selection and level change
  * - mechanics:                 similar to solve, add a create level function that creates a level randomly
  * - rules:                     for extreme [2] at y: 8, x: 2, the number 3 can be eliminated due to the possible permutations when trying different numbers in the other tiles
+ *                              solution idea: go through all possible numbers (in this case 1 and 3) and check if that number would be used if the other tiles can be filled with the remaining sum
+ *                              in this case, the 3 would mean that the other tiles have a restsum of 9 and that can not be achieved.
+ *                              or another solution could be to have the two remaining rowpermutations 100 000 011 and 010 000 101, then trying out with the 3 would reduce the leftover permutation to be only the second one 010 000 101, the 3 taken away which leaves 010 000 001, which is not a valid permutation when looking at the leftover tiles
  *
  * DONE:
  * - rules:                     for easy[1], specify a rule that solves row 2 by realizing that only 8 and 9 are already fixed for the final permutation and adjust the other tiles accordingly
