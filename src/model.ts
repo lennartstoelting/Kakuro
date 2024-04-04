@@ -153,21 +153,16 @@ export class Model {
 
         let otherCandidatesinCol: number[] = [];
         col.tiles.forEach((tile: { y: number; x: number }) => {
-            // removing permutations that don't include any of the tiles candidates
             colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
-            // setup for sudoku rules
-            otherCandidatesinCol.push(this.matrix[tile.y][tile.x]);
-            // rule out permutations in other tiles based on possible permutations from this tile
             this.matrix[tile.y][tile.x] &= leftoverColPermutations;
+            otherCandidatesinCol.push(this.matrix[tile.y][tile.x]);
         });
 
         let colCandidatesCounted = otherCandidatesinCol.reduce((cnt: any, cur: any) => ((cnt[cur] = cnt[cur] + 1 || 1), cnt), {});
         for (const [key, value] of Object.entries(colCandidatesCounted)) {
             if (this.candidatesAsReadableArray(parseInt(key)).length !== value) continue;
-            // I can cross off the matrix candidates sudoku style
             this.matrix[y][x] &= ~parseInt(key);
-            // and I can adapt the permutations
             colPermutations = colPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
         }
 
@@ -238,6 +233,7 @@ export class Model {
             if (tile.x === x && tile.y === y) return;
 
             // rule out permutations in other tiles based on possible permutations from this tile
+            // this part could probably be skipped because of the way we handle specificCandidateWorksOut in the previous forEach loop
             this.matrix[tile.y][tile.x] &= leftoverRowPermutations;
 
             // setup for sudoku rules
