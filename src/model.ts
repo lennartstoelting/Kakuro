@@ -124,17 +124,17 @@ export class Model {
         let col = this.getColumnInfo(y, x);
         let colPermutations = this.sumTable[col.sum][col.tiles.length];
 
-        let otherCandidatesinCol: number[] = [];
-
         let leftoverColPermutations = 0;
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
-            let colPermutationsForNum = this.sumTable[col.sum][col.tiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
-            colPermutationsForNum = colPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
-            colPermutationsForNum.forEach((permutation) => {
+            let candidateNotation = 2 ** (num - 1);
+            let colPermutationsWithThisNum = colPermutations.filter((permutation) => permutation & candidateNotation);
+            colPermutationsWithThisNum = colPermutationsWithThisNum.map((permutation) => permutation & ~candidateNotation);
+            colPermutationsWithThisNum.forEach((permutation) => {
                 leftoverColPermutations |= permutation;
             });
         });
 
+        let otherCandidatesinCol: number[] = [];
         col.tiles.forEach((tile: { y: number; x: number }) => {
             // removing permutations that don't include any of the tiles candidates
             colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
@@ -159,35 +159,62 @@ export class Model {
 
     rowPermutations(y: number, x: number): number {
         let row = this.getRowInfo(y, x);
-        let rowPermutations = this.sumTable[row.sum][row.tiles.length];
 
-        let otherCandidatesinRow: number[] = [];
+        // row permutations stores all possible permutations for the row
+        // in the beginning these are just all possible permutations for the sum and the amount of tiles in the row
+        let rowPermutations = this.sumTable[row.sum][row.tiles.length];
 
         let leftoverRowPermutations = 0;
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
-            let rowPermutationsForNum = this.sumTable[row.sum][row.tiles.length].filter((permutation) => permutation & (2 ** (num - 1)));
-            rowPermutationsForNum = rowPermutationsForNum.map((permutation) => permutation & ~(2 ** (num - 1)));
-            rowPermutationsForNum.forEach((permutation) => {
+            // example: if the tile we are currently looking at has a 1 and a 3 as candidates
+            // each loop looks at a single candidate at a time
+            // this variable stores the 3 in candidateNotation, so not three but 000 000 100 or 4 in decimal (or the 1 a 000 000 001 or 1 in decimal)
+            let candidateNotation = 2 ** (num - 1);
+
+            // now we individually look at the permutations that
+            // include a 1 and then in the next forEach loop the permutations that include a 3
+            let rowPermutationsWithThisNum = rowPermutations.filter((permutation) => permutation & candidateNotation);
+
+            // now we look at all those permutations and remove the 3 from them
+            rowPermutationsWithThisNum = rowPermutationsWithThisNum.map((permutation) => permutation & ~candidateNotation);
+
+            // now we combine all those permutations that had a three in them, that is now removed, and combine them
+            // these leftover permutations will later be applied to the other tiles in the row
+            rowPermutationsWithThisNum.forEach((permutation) => {
                 leftoverRowPermutations |= permutation;
             });
         });
 
+        let otherCandidatesinRow: number[] = [];
+
         row.tiles.forEach((tile: { y: number; x: number }) => {
-            // removing permutations that don't include any of the tiles candidates
+            // removing permutations that don't include any of the other tiles candidates or even the canditates already set in this tile
             rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
+
             if (tile.x === x && tile.y === y) return;
-            // setup for sudoku rules
-            otherCandidatesinRow.push(this.matrix[tile.y][tile.x]);
+
             // rule out permutations in other tiles based on possible permutations from this tile
             this.matrix[tile.y][tile.x] &= leftoverRowPermutations;
+
+            // setup for sudoku rules
+            otherCandidatesinRow.push(this.matrix[tile.y][tile.x]);
         });
 
+        // row Candidates Counted is a dictionary that counts how often a certain candidate combination appears in the other tiles
+        // so if we have four tiles and are currently soliving the leftmost one. The  first tile to a right has candidates 2 and 3, the next one 8 and 9 and the last one also 8 and 9.
+        // then rowCandidatesCounted would be { 6: 1, 384: 2 } because 6 is 000 000 110 and 384 is 110 000 000
         let rowCandidatesCounted = otherCandidatesinRow.reduce((cnt: any, cur: any) => ((cnt[cur] = cnt[cur] + 1 || 1), cnt), {});
+
         for (const [key, value] of Object.entries(rowCandidatesCounted)) {
             if (this.candidatesAsReadableArray(parseInt(key)).length !== value) continue;
-            // I can cross off the matrix candidates sudoku style
+
+            // If the current candidate combination appears as often as the number of candidates it has itself, then they are set to be the final candidates in the other tiles without knowing their order yet
+            // but because they are set in the other tiles, the current tile can't have them anymore
+            // for tiles that only have a single number left, this algorithm works the same as intuitively solving a sudoku
             this.matrix[y][x] &= ~parseInt(key);
+
             // and I can adapt the permutations
+            // like in our example, the 8 and 9 both have to be in the final permutation of the row, so we can remove all permutations that don't include both of them
             rowPermutations = rowPermutations.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
         }
 
