@@ -125,16 +125,11 @@ export class Model {
         let colPermutations = this.sumTable[col.sum][col.tiles.length];
 
         // general setup and setuo for sudoku rules and individual candidate checking
-        let candidatesInOtherTilesCombined = 0;
         let otherCandidatesinCol: number[] = [];
         col.tiles.forEach((tile: { y: number; x: number }) => {
-            // general setup
             colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
-            // setup for sudoku rules
             otherCandidatesinCol.push(this.matrix[tile.y][tile.x]);
-            // setup for individual candidate checking
-            candidatesInOtherTilesCombined |= this.matrix[tile.y][tile.x];
         });
 
         // sudoku rules
@@ -147,6 +142,7 @@ export class Model {
 
         // individual candidate checking
         // let leftoverColPermutations = 0;
+        let candidatesInOtherTilesCombined = otherCandidatesinCol.reduce((acc, cur) => acc | cur, 0);
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             let candidateNotation = 2 ** (num - 1);
             let colPermutationsWithThisNum = colPermutations.filter((permutation) => permutation & candidateNotation);
@@ -157,13 +153,11 @@ export class Model {
 
             let specificCandidateWorksOut = false;
             colPermutationsWithThisNum.forEach((permutation) => {
-                if ((permutation & candidatesInOtherTilesCombined) === permutation) {
-                    specificCandidateWorksOut = true;
-                }
+                if ((permutation & candidatesInOtherTilesCombined) !== permutation) return;
+                specificCandidateWorksOut = true;
             });
-            if (!specificCandidateWorksOut) {
-                this.matrix[y][x] &= ~candidateNotation;
-            }
+            if (specificCandidateWorksOut) return;
+            this.matrix[y][x] &= ~candidateNotation;
         });
 
         // col.tiles.forEach((tile: { y: number; x: number }) => {
@@ -177,13 +171,12 @@ export class Model {
     rowPermutations(y: number, x: number): number {
         let row = this.getRowInfo(y, x);
 
-        // row permutations stores all possible permutations for the row
-        // in the beginning these are just all possible permutations for the sum and the amount of tiles in the row
+        // row permutations is all the possible permutations for the sum and the amount of tiles in the row
         let rowPermutations = this.sumTable[row.sum][row.tiles.length];
 
         // general setup and setup for sudoku rules and individual candidate checking
-        let candidatesInOtherTilesCombined = 0;
         let otherCandidatesinRow: number[] = [];
+        // let candidatesInOtherTilesCombined = 0;
         row.tiles.forEach((tile: { y: number; x: number }) => {
             // general setup (removing permutations that don't include any of the other tiles candidates or even the canditates already set in this tile)
             rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
@@ -192,7 +185,7 @@ export class Model {
             // setup for sudoku rules
             otherCandidatesinRow.push(this.matrix[tile.y][tile.x]);
             // setup for individual candidate checking
-            candidatesInOtherTilesCombined |= this.matrix[tile.y][tile.x];
+            // candidatesInOtherTilesCombined |= this.matrix[tile.y][tile.x];
         });
 
         // sudoku rules
@@ -212,6 +205,7 @@ export class Model {
 
         // individual candidate checking
         // let leftoverRowPermutations = 0;
+        let candidatesInOtherTilesCombined = otherCandidatesinRow.reduce((acc, cur) => acc | cur, 0);
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             // example: if the tile we are currently looking at has a 1 and a 3 as candidates
             // each loop looks at a single candidate at a time
