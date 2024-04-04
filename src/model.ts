@@ -135,7 +135,7 @@ export class Model {
             });
         });
 
-        col.tiles.forEach((tile: { x: number; y: number }) => {
+        col.tiles.forEach((tile: { y: number; x: number }) => {
             // removing permutations that don't include any of the tiles candidates
             colPermutations = colPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
@@ -172,7 +172,7 @@ export class Model {
             });
         });
 
-        row.tiles.forEach((tile: { x: number; y: number }) => {
+        row.tiles.forEach((tile: { y: number; x: number }) => {
             // removing permutations that don't include any of the tiles candidates
             rowPermutations = rowPermutations.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
             if (tile.x === x && tile.y === y) return;
@@ -194,11 +194,11 @@ export class Model {
         return this.reduceToSuperposition(rowPermutations);
     }
 
-    private getColumnInfo(y: number, x: number): { sum: number; tiles: { x: number; y: number }[] } {
+    private getColumnInfo(y: number, x: number): { sum: number; tiles: { y: number; x: number }[] } {
         while (y >= 0 && this.matrix[y][x] & 511) {
             y--;
         }
-        let colCoordinates: { x: number; y: number }[] = [];
+        let colCoordinates: { y: number; x: number }[] = [];
         while (y + colCoordinates.length < 9 && this.matrix[y + colCoordinates.length + 1][x] & 511) {
             colCoordinates.push({ y: y + colCoordinates.length + 1, x: x });
         }
@@ -206,11 +206,11 @@ export class Model {
         return { sum: this.matrix[y][x] >> 15, tiles: colCoordinates };
     }
 
-    private getRowInfo(y: number, x: number): { sum: number; tiles: { x: number; y: number }[] } {
+    private getRowInfo(y: number, x: number): { sum: number; tiles: { y: number; x: number }[] } {
         while (x >= 0 && this.matrix[y][x] & 511) {
             x--;
         }
-        let rowCoordinates: { x: number; y: number }[] = [];
+        let rowCoordinates: { y: number; x: number }[] = [];
         while (x + rowCoordinates.length < 9 && this.matrix[y][x + rowCoordinates.length + 1] & 511) {
             rowCoordinates.push({ y: y, x: x + rowCoordinates.length + 1 });
         }
