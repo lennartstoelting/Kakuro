@@ -48,7 +48,7 @@ class Controller {
 
         this.debug1.addEventListener("click", () => {
             this.view.solvingInProgress = true;
-            this.model.solveTile(2, 3);
+            this.model.solveTile(7, 5);
             this.updateView();
         });
     }

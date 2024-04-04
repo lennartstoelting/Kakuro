@@ -166,6 +166,11 @@ export class Model {
          * we check for the 1 and then the 3, if the neighbouring tiles can be filled with the remaining sum
          */
         let candidatesInOtherTilesCombined = this.reduceToSuperposition(neighbouringCandidates);
+
+        // instead of reducing the neighbouring Candidates, I want to create all the possible combinations that those neighbouring candidates can form
+        // in my example, the neighbouringCandidates is 111 000 000 and 000 110 000
+        // in decimal, that is 448 and 96
+
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             let candidate = 2 ** (num - 1);
             let permsOfIndividual = perms.filter((perm) => perm & candidate);
