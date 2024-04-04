@@ -171,6 +171,8 @@ export class Model {
         // in my example, the neighbouringCandidates is 111 000 000 and 000 110 000
         // in decimal, that is 448 and 96
 
+        // this is for the tile at y: 7, x: 5 in extreme[1]
+
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             let candidate = 2 ** (num - 1);
             let permsOfIndividual = perms.filter((perm) => perm & candidate);
