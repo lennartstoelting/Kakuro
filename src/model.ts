@@ -138,7 +138,7 @@ export class Model {
         // all the possible permutations reduced to only those that are possible with the candidates that are already set in this tile
         let neighbouringCandidates: number[] = [];
         info.tiles.forEach((tile: { y: number; x: number }) => {
-            perms = perms.filter((permutation) => permutation & this.matrix[tile.y][tile.x]);
+            perms = perms.filter((perm) => perm & this.matrix[tile.y][tile.x]);
 
             // setup for steps 2 and 3
             if (tile.x === x && tile.y === y) return;
@@ -156,7 +156,7 @@ export class Model {
         for (const [key, value] of Object.entries(candidatesCounted)) {
             if (this.candidatesAsReadableArray(parseInt(key)).length !== value) continue;
             this.matrix[y][x] &= ~parseInt(key);
-            perms = perms.filter((permutation) => (permutation & parseInt(key)) == parseInt(key));
+            perms = perms.filter((perm) => (perm & parseInt(key)) == parseInt(key));
         }
 
         // individual candidate checking
@@ -165,15 +165,12 @@ export class Model {
         let candidatesInOtherTilesCombined = this.reduceToSuperposition(neighbouringCandidates);
         this.candidatesAsReadableArray(this.matrix[y][x]).forEach((num) => {
             let candidate = 2 ** (num - 1);
-            let permsOfIndividual = perms.filter((permutation) => permutation & candidate);
-            let permsWithoutCandidate = permsOfIndividual.map((permutation) => permutation & ~candidate);
+            let permsOfIndividual = perms.filter((perm) => perm & candidate);
+            let permsWithoutCandidate = permsOfIndividual.map((perm) => perm & ~candidate);
 
-            let specificCandidateWorksOut = false;
-            permsWithoutCandidate.forEach((permutation) => {
-                if ((permutation & candidatesInOtherTilesCombined) !== permutation) return;
-                specificCandidateWorksOut = true;
-            });
-            if (specificCandidateWorksOut) return;
+            // when at least one of the permsWithoutCandidate can be achieved with any of the candidates in the neighbouring tiles, this candidate is true and can be kept
+            if (permsWithoutCandidate.some((perm) => (perm & candidatesInOtherTilesCombined) === perm)) return;
+            // otherwise, no permutation will work out with this individual candidate, so we can filter it out
             this.matrix[y][x] &= ~candidate;
         });
 
